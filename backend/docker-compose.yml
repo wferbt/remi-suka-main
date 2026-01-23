@@ -1,0 +1,32 @@
+services:
+  grocery_db:
+    image: postgres:15-alpine
+    container_name: grocery_db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=your_password_here
+      - POSTGRES_DB=grocery_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d grocery_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nest_backend:
+    build: .
+    container_name: nest_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=grocery_db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=your_password_here
+      - DB_DATABASE=grocery_db
+    depends_on:
+      grocery_db:
+        condition: service_healthy
