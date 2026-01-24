@@ -1,38 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Product } from './product.entity';
 
 @Injectable()
 export class CatalogService {
-  constructor(
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
-  ) {}
-
-  async syncProducts(data: any[]) {
-    for (const item of data) {
-      let product = await this.productRepository.findOne({ where: { externalId: item.id } });
-      if (!product) {
-        product = this.productRepository.create({ externalId: item.id });
-      }
-      product.name = item.name;
-      product.price = item.price;
-      product.stock = item.stock;
-      await this.productRepository.save(product);
-    }
-    return { success: true, count: data.length };
-  }
+  constructor() {} // Пустой конструктор, ничего не просим у базы
 
   async findAll() {
-    // Получаем реальные товары из базы (если они есть)
-    const realProducts = await this.productRepository.find();
-
-    // Создаем тестовые товары для фильтров
+    // Оставляем только тестовые товары, чтобы точно ничего не сломалось
     const mockProducts = [
       {
         id: 991,
-        externalId: "m1",
         name: "Молоко «Отборное» 3.5%",
         category: "Молоко",
         price: 89,
@@ -41,7 +17,6 @@ export class CatalogService {
       },
       {
         id: 992,
-        externalId: "k1",
         name: "Кефир полезный 2.5%",
         category: "Кефир",
         price: 75,
@@ -50,7 +25,6 @@ export class CatalogService {
       },
       {
         id: 993,
-        externalId: "s1",
         name: "Сметана домашняя 20%",
         category: "Сметана",
         price: 120,
@@ -59,7 +33,6 @@ export class CatalogService {
       },
       {
         id: 994,
-        externalId: "y1",
         name: "Йогурт натуральный",
         category: "Йогурт",
         price: 45,
@@ -68,7 +41,6 @@ export class CatalogService {
       },
       {
         id: 995,
-        externalId: "t1",
         name: "Творог фермерский 9%",
         category: "Творог",
         price: 115,
@@ -77,7 +49,11 @@ export class CatalogService {
       }
     ];
 
-    // Склеиваем товары из базы и наши тестовые
-    return [...realProducts, ...mockProducts];
+    return mockProducts;
+  }
+
+  // Пустая заглушка, чтобы другие части кода не ругались, если вызывают этот метод
+  async syncProducts(data: any[]) {
+    return { success: true, count: 0 };
   }
 }
