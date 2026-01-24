@@ -3,7 +3,6 @@ import { CatalogController } from './catalog.controller';
 import { CatalogService } from './catalog.service';
 
 @Module({
-  imports: [], // Удали отсюда TypeOrmModule.forFeature([Product])
   controllers: [CatalogController],
   providers: [CatalogService],
 })
