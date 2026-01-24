@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Package, Plus, X, Loader2 } from 'lucide-react';
 import api from './api';
 
-// --- ВОЗВРАЩАЕМ ТИПЫ ---
+
 type Product = {
   externalId: string;
   name: string;
@@ -19,7 +19,7 @@ function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Состояние для нашего "хитрого" фильтра
+  
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   useEffect(() => {
@@ -34,12 +34,12 @@ function App() {
       });
   }, []);
 
-  // Логика фильтрации: создаем новый массив на основе поиска в названии
+
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(selectedCategory.toLowerCase())
   );
 
-  // --- ВОЗВРАЩАЕМ ФУНКЦИИ КОРЗИНЫ ---
+  
   const addToCart = (product: Product) => {
     setCart(prev => {
       const existing = prev.find(item => item.externalId === product.externalId);
@@ -104,7 +104,7 @@ function App() {
             <div className="mb-6">
               <h2 className="text-2xl font-bold mb-4">Каталог продуктов</h2>
               
-              {/* КНОПКИ ФИЛЬТРАЦИИ */}
+              
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {['', 'Молоко', 'Кефир', 'Сметана', 'Творог'].map((cat) => (
                   <button 
@@ -149,7 +149,7 @@ function App() {
             )}
           </div>
 
-          {/* КОРЗИНА */}
+          
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 sticky top-24">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">Ваш заказ</h2>
