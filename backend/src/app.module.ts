@@ -3,7 +3,7 @@ import { CatalogModule } from './catalog/catalog.module';
 
 @Module({
   imports: [
-    CatalogModule, // Оставляем только каталог
+    CatalogModule, // Оставляем ТОЛЬКО этот модуль
   ],
 })
 export class AppModule {}
