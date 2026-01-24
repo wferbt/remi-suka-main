@@ -2,30 +2,15 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Package, Plus, X, Loader2 } from 'lucide-react';
 import api from './api';
 
-// --- ВОЗВРАЩАЕМ ТИПЫ ---
-type Product = {
-  externalId: string;
-  name: string;
-  price: number;
-  stock: number;
-};
-
-type CartItem = Product & {
-  quantity: number;
-};
-
 function App() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Состояние для нашего "хитрого" фильтра
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   useEffect(() => {
     api.get('/catalog')
       .then(res => {
-        setProducts(res.data as Product[]);
+        setProducts(res.data);
         setLoading(false);
       })
       .catch(err => {
@@ -34,13 +19,7 @@ function App() {
       });
   }, []);
 
-  // Логика фильтрации: создаем новый массив на основе поиска в названии
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(selectedCategory.toLowerCase())
-  );
-
-  // --- ВОЗВРАЩАЕМ ФУНКЦИИ КОРЗИНЫ ---
-  const addToCart = (product: Product) => {
+  const addToCart = (product) => {
     setCart(prev => {
       const existing = prev.find(item => item.externalId === product.externalId);
       if (existing) {
@@ -54,8 +33,8 @@ function App() {
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.externalId !== id));
+  const removeFromCart = (id) => {
+    setCart(cart.filter(item => item.externalId !== id));
   };
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -101,34 +80,17 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           <div className="lg:col-span-2">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-4">Каталог продуктов</h2>
-              
-              {/* КНОПКИ ФИЛЬТРАЦИИ */}
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                {['', 'Молоко', 'Кефир', 'Сметана', 'Творог'].map((cat) => (
-                  <button 
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
-                      selectedCategory === cat ? 'bg-green-600 text-white' : 'bg-white border text-gray-600'
-                    }`}
-                  >
-                    {cat === '' ? 'Все' : cat}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <h2 className="text-2xl font-bold mb-6">Каталог продуктов</h2>
             
             {loading ? (
               <div className="flex justify-center py-20"><Loader2 className="animate-spin text-green-600" size={40} /></div>
-            ) : filteredProducts.length === 0 ? (
+            ) : products.length === 0 ? (
               <div className="bg-white p-10 rounded-3xl text-center border-2 border-dashed border-gray-200">
-                <p className="text-gray-400">Товаров не найдено.</p>
+                <p className="text-gray-400">Товаров пока нет. Добавьте их через API.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {filteredProducts.map(product => (
+                {products.map(product => (
                   <div key={product.externalId} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
                     <div className="flex justify-between items-start mb-4">
                       <div>
@@ -149,7 +111,6 @@ function App() {
             )}
           </div>
 
-          {/* КОРЗИНА */}
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 sticky top-24">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">Ваш заказ</h2>
