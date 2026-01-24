@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://10.0.2.2:3000', // ВАЖНО для Android
+  baseURL: 'remi-suka-main-production.up.railway.app', // ВАЖНО для Android
   headers: {
     'Content-Type': 'application/json',
   },
