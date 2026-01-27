@@ -16,10 +16,10 @@ type CartItem = Product & {
 // Исправленные пути к твоим сгенерированным картинкам
 const CATEGORIES = [
   { id: '', name: 'Все', img: 'https://cdn-icons-png.flaticon.com/512/2331/2331970.png' },
-  { id: 'Молоко', name: 'Молоко', img: 'public/products/milk.png' },
-  { id: 'Кефир', name: 'Кефир', img: 'public/products/kefir.png' },
-  { id: 'Сметана', name: 'Сметана', img: 'public/products/smetana.png' },
-  { id: 'Творог', name: 'Творог', img: 'public/products/tvorog.png' },
+  { id: 'Молоко', name: 'Молоко', img: '/products/milk.png' },
+  { id: 'Кефир', name: 'Кефир', img: '/products/kefir.png' },
+  { id: 'Сметана', name: 'Сметана', img: '/products/smetana.png' },
+  { id: 'Творог', name: 'Творог', img: '/products/tvorog.png' },
 ];
 
 function App() {
