@@ -13,13 +13,13 @@ type CartItem = Product & {
   quantity: number;
 };
 
-// ОБНОВЛЕННЫЕ ПУТИ К ТВОИМ КАРТИНКАМ
+// Исправленные пути к твоим сгенерированным картинкам
 const CATEGORIES = [
   { id: '', name: 'Все', img: 'https://cdn-icons-png.flaticon.com/512/2331/2331970.png' },
-  { id: 'Молоко', name: 'Молоко', img: '/products/молоко.png' },
-  { id: 'Кефир', name: 'Кефир', img: '/products/кефир.png' },
-  { id: 'Сметана', name: 'Сметана', img: '/products/сметана.png' },
-  { id: 'Творог', name: 'Творог', img: '/products/творог.png' },
+  { id: 'Молоко', name: 'Молоко', img: '/products/milk.png' },
+  { id: 'Кефир', name: 'Кефир', img: '/products/kefir.png' },
+  { id: 'Сметана', name: 'Сметана', img: '/products/smetana.png' },
+  { id: 'Творог', name: 'Творог', img: '/products/tvorog.png' },
 ];
 
 function App() {
@@ -115,7 +115,7 @@ function App() {
                     ? 'border-[#E63946] bg-white scale-105 shadow-red-500/10' 
                     : `${isDark ? 'bg-[#1a1d21] border-transparent' : 'bg-white border-transparent'}`
                 }`}>
-                  <img src={cat.img} alt={cat.name} className="w-10 h-10 object-cover" />
+                  <img src={cat.img} alt={cat.name} className="w-full h-full object-cover scale-110" />
                 </div>
                 <span className={`text-[11px] font-black ${selectedCategory === cat.id ? theme.accent : 'text-gray-400'}`}>
                   {cat.name}
@@ -129,7 +129,9 @@ function App() {
           <div className="lg:col-span-3">
             <div className="flex items-center justify-between mb-6 px-1">
               <h2 className="text-2xl font-black tracking-tighter">{selectedCategory || 'Каталог товаров'}</h2>
-              <span className={`text-sm font-bold ${theme.muted}`}>{products.filter(p => p.name.includes(selectedCategory)).length} шт.</span>
+              <span className={`text-sm font-bold ${theme.muted}`}>
+                {products.filter(p => p.name.toLowerCase().includes(selectedCategory.toLowerCase())).length} шт.
+              </span>
             </div>
             
             {loading ? (
@@ -143,14 +145,17 @@ function App() {
                         src={`/products/${product.externalId}.png`} 
                         className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" 
                         alt={product.name} 
-                        onError={(e) => { (e.currentTarget.src = 'https://loremflickr.com/400/400/dairy?lock=' + product.externalId) }}
+                        onError={(e) => { 
+                          const cat = CATEGORIES.find(c => product.name.includes(c.id));
+                          e.currentTarget.src = cat?.img || 'https://loremflickr.com/400/400/dairy';
+                        }}
                       />
                     </div>
                     <div className="p-4 flex flex-col flex-grow">
                       <h3 className="font-bold text-sm h-10 overflow-hidden line-clamp-2 mb-2 leading-snug">{product.name}</h3>
                       <div className="mt-auto flex items-center justify-between">
                         <p className="font-bold text-xl">{product.price} ₸</p>
-                        <button onClick={() => addToCart(product)} className={`bg-[#212529] dark:bg-[#E63946] text-white p-2.5 rounded-xl hover:opacity-90 transition-all active:scale-90 shadow-md`}>
+                        <button onClick={() => addToCart(product)} className={`${theme.accentBg} text-white p-2.5 rounded-xl hover:opacity-90 transition-all active:scale-90 shadow-md`}>
                           <Plus size={20} strokeWidth={3} />
                         </button>
                       </div>
@@ -178,7 +183,14 @@ function App() {
                     {cart.map(item => (
                       <div key={item.externalId} className="flex gap-3 items-center">
                         <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-xl flex-shrink-0 flex items-center justify-center p-1">
-                           <img src={`/products/${item.externalId}.png`} className="w-full h-full object-contain rounded" onError={(e) => { e.currentTarget.src = 'https://loremflickr.com/100/100/food' }} />
+                           <img 
+                             src={`/products/${item.externalId}.png`} 
+                             className="w-full h-full object-contain rounded" 
+                             onError={(e) => { 
+                               const cat = CATEGORIES.find(c => item.name.includes(c.id));
+                               e.currentTarget.src = cat?.img || 'https://loremflickr.com/100/100/food';
+                             }} 
+                           />
                         </div>
                         <div className="flex-grow">
                           <p className="font-bold text-[11px] leading-tight line-clamp-1">{item.name}</p>
