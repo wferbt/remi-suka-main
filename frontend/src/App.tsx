@@ -188,7 +188,7 @@ function App() {
                              className="w-full h-full object-contain rounded" 
                              onError={(e) => { 
                                const cat = CATEGORIES.find(c => item.name.includes(c.id));
-                               e.currentTarget.src = cat?.img || 'https://loremflickr.com/100/100/food';
+                               e.currentTarget.src = cat?.img || 'file:///home/vilen/%D0%A0%D0%B0%D0%B1%D0%BE%D1%87%D0%B8%D0%B9%20%D1%81%D1%82%D0%BE%D0%BB/remi-suka-main/frontend/public/products/kefir.png';
                              }} 
                            />
                         </div>
