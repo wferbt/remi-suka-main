@@ -68,7 +68,6 @@ function App() {
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const theme = {
-    // Сделал светлый фон чуть более серым (E9ECEF), чтобы не был таким ярким
     bg: isDark ? 'bg-[#121417]' : 'bg-[#E9ECEF]', 
     nav: isDark ? 'bg-[#1a1d21] border-gray-800' : 'bg-[#F8F9FA] border-gray-200',
     card: isDark ? 'bg-[#1a1d21] border-gray-800 shadow-xl' : 'bg-white border-transparent shadow-sm',
@@ -105,7 +104,6 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <section className="mb-8">
           <h2 className={`text-lg font-black mb-4 px-1 ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>Категории</h2>
-          {/* ВОТ ТВОЙ ВЫХОД: pt-[10px] добавлен здесь */}
           <div className="flex gap-4 overflow-x-auto pb-4 pt-[10px] scrollbar-hide px-1">
             {CATEGORIES.map((cat) => (
               <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className="flex-shrink-0 flex flex-col items-center group">
@@ -148,7 +146,8 @@ function App() {
                     <div className="p-4 flex flex-col flex-grow">
                       <h3 className="font-bold text-sm h-10 overflow-hidden line-clamp-2 mb-2 leading-snug">{product.name}</h3>
                       <div className="mt-auto flex items-center justify-between">
-                        <p className="font-black text-xl">{product.price} ₸</p>
+                        {/* ЦЕНА ТЕПЕРЬ font-bold */}
+                        <p className="font-bold text-xl">{product.price} ₸</p>
                         <button onClick={() => addToCart(product)} className="bg-[#121417] dark:bg-green-600 text-white p-2.5 rounded-xl hover:bg-[#28A745] transition-colors active:scale-90 shadow-md">
                           <Plus size={20} strokeWidth={3} />
                         </button>
@@ -163,7 +162,8 @@ function App() {
           <div className="lg:col-span-1">
             <div className={`${isDark ? 'bg-[#1a1d21]' : 'bg-white shadow-2xl'} p-5 rounded-[30px] border border-gray-100 dark:border-gray-800 sticky top-24`}>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black tracking-tighter text-[#28A745]">Ваш заказ</h2>
+                {/* ВАШ ЗАКАЗ ТЕПЕРЬ font-bold */}
+                <h2 className="text-xl font-bold tracking-tighter text-[#28A745]">Ваш заказ</h2>
                 {cart.length > 0 && (
                   <button onClick={() => setCart([])} className="text-[#28A745] text-xs font-black uppercase tracking-widest">CLEAR</button>
                 )}
@@ -181,15 +181,16 @@ function App() {
                         </div>
                         <div className="flex-grow">
                           <p className="font-bold text-[11px] leading-tight line-clamp-1">{item.name}</p>
-                          <p className="text-[10px] text-[#28A745] font-black">{item.quantity} шт × {item.price} ₸</p>
+                          <p className="text-[10px] text-[#28A745] font-bold">{item.quantity} шт × {item.price} ₸</p>
                         </div>
                         <button onClick={() => removeFromCart(item)} className="text-gray-300 hover:text-red-500 p-1"><X size={16} /></button>
                       </div>
                     ))}
                   </div>
                   <div className="border-t border-dashed pt-4 border-gray-200 dark:border-gray-700">
-                    <div className="flex justify-between items-center mb-5 font-black">
+                    <div className="flex justify-between items-center mb-5 font-bold">
                       <span className={theme.muted}>Итого:</span>
+                      {/* ИТОГО ТЕПЕРЬ font-bold */}
                       <span className="text-2xl">{total} ₸</span>
                     </div>
                     <button className="w-full bg-[#28A745] text-white py-4 rounded-2xl font-black text-lg hover:bg-[#218838] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-green-500/20 active:scale-95">
