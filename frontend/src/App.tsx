@@ -67,35 +67,32 @@ function App() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Стили «по-красоте»
   const theme = {
-    bg: isDark ? 'bg-[#121417]' : 'bg-[#FFFFFF]',
-    nav: isDark ? 'bg-[#1a1d21]/80 border-gray-800' : 'bg-white/80 border-gray-100',
-    card: isDark ? 'bg-[#1a1d21] border-gray-800' : 'bg-[#F8F9FA] border-transparent',
-    text: isDark ? 'text-white' : 'text-[#1A1C1E]',
+    bg: isDark ? 'bg-[#121417]' : 'bg-[#F2F4F7]',
+    nav: isDark ? 'bg-[#1a1d21] border-gray-800' : 'bg-white border-gray-100',
+    card: isDark ? 'bg-[#1a1d21] border-gray-800 shadow-xl' : 'bg-white border-transparent shadow-sm',
+    text: isDark ? 'text-white' : 'text-gray-900',
     muted: isDark ? 'text-gray-500' : 'text-gray-400',
-    cartBg: isDark ? 'bg-[#1a1d21]' : 'bg-white shadow-2xl border border-gray-100'
   };
 
   return (
-    <div className={`min-h-screen ${theme.bg} ${theme.text} transition-colors duration-500 selection:bg-green-500/30`}>
-      {/* Навигация */}
-      <nav className={`${theme.nav} sticky top-0 z-50 border-b backdrop-blur-md h-16`}>
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+    <div className={`min-h-screen ${theme.bg} ${theme.text} font-sans transition-all duration-300`}>
+      <nav className={`${theme.nav} sticky top-0 z-50 border-b h-16 shadow-md`}>
+        <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-sm">G</span>
+            <div className="bg-[#28A745] p-1.5 rounded-xl shadow-lg shadow-green-900/20">
+              <span className="text-white font-black">G</span>
             </div>
-            <span className="text-lg font-black tracking-tight uppercase">GreenFood</span>
+            <span className="text-xl font-black tracking-tighter text-[#28A745]">GreenFood</span>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsDark(!isDark)} className="p-2.5 rounded-full hover:bg-gray-500/10 transition-colors">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsDark(!isDark)} className="p-2 rounded-xl bg-gray-500/10 hover:bg-gray-500/20 transition-all">
               {isDark ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} className="text-blue-600" />}
             </button>
-            <div className="relative p-2.5 rounded-full bg-gray-500/5">
-              <ShoppingCart size={20} />
+            <div className="relative p-2.5 bg-gray-500/10 rounded-xl">
+              <ShoppingCart size={22} className={isDark ? 'text-gray-300' : 'text-gray-700'} />
               {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white dark:border-[#1a1d21]">
+                <span className="absolute -top-1 -right-1 bg-[#FF3B30] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white dark:border-[#121417]">
                   {cart.reduce((a, b) => a + b.quantity, 0)}
                 </span>
               )}
@@ -104,24 +101,20 @@ function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 py-10">
-        {/* Категории — Новый стиль без «кривых» бордеров */}
-        <section className="mb-12">
-          <div className="flex gap-8 overflow-x-auto pb-4 scrollbar-hide items-center">
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <section className="mb-8">
+          <h2 className={`text-lg font-black mb-4 px-1 ${isDark ? 'text-gray-400' : 'text-gray-800'}`}>Категории</h2>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-1">
             {CATEGORIES.map((cat) => (
-              <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className="group flex flex-col items-center flex-shrink-0">
-                <div className={`relative p-1 rounded-full transition-all duration-300 ${
-                  selectedCategory === cat.id ? 'ring-2 ring-green-500 ring-offset-4 ring-offset-transparent' : 'ring-0'
+              <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className="flex-shrink-0 flex flex-col items-center group">
+                <div className={`w-16 h-16 rounded-[22px] flex items-center justify-center mb-2 transition-all duration-300 border-2 overflow-hidden shadow-sm ${
+                  selectedCategory === cat.id 
+                    ? 'border-[#28A745] bg-white scale-105 shadow-green-500/10' 
+                    : `${isDark ? 'bg-[#1a1d21] border-transparent' : 'bg-white border-transparent'}`
                 }`}>
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden transition-all shadow-sm ${
-                    isDark ? 'bg-gray-800' : 'bg-gray-100'
-                  } group-hover:scale-110`}>
-                    <img src={cat.img} className="w-9 h-9 object-contain" alt={cat.name} />
-                  </div>
+                  <img src={cat.img} alt={cat.name} className="w-10 h-10 object-contain" />
                 </div>
-                <span className={`mt-4 text-[11px] font-black uppercase tracking-widest transition-colors ${
-                  selectedCategory === cat.id ? 'text-green-500' : theme.muted
-                }`}>
+                <span className={`text-[11px] font-black ${selectedCategory === cat.id ? 'text-[#28A745]' : 'text-gray-400'}`}>
                   {cat.name}
                 </span>
               </button>
@@ -129,26 +122,33 @@ function App() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
-            <h2 className="text-3xl font-black mb-8 tracking-tighter">{selectedCategory || 'Весь каталог'}</h2>
-            {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin text-green-500" size={40} /></div> : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="flex items-center justify-between mb-6 px-1">
+              <h2 className="text-2xl font-black tracking-tighter">{selectedCategory || 'Все продукты'}</h2>
+              <span className={`text-sm font-bold ${theme.muted}`}>{products.filter(p => p.name.includes(selectedCategory)).length} товаров</span>
+            </div>
+            
+            {loading ? (
+              <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#28A745]" size={40} /></div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {products.filter(p => p.name.toLowerCase().includes(selectedCategory.toLowerCase())).map(product => (
-                  <div key={product.externalId} className={`${theme.card} rounded-[32px] border overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-500`}>
-                    <div className="h-48 p-8 flex items-center justify-center relative">
+                  <div key={product.externalId} className={`${theme.card} rounded-[24px] overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col group transition-transform hover:-translate-y-1`}>
+                    <div className="h-40 bg-[#F8F9FA] dark:bg-[#121417] flex items-center justify-center p-4 overflow-hidden relative">
                       <img 
                         src={`/products/${product.externalId}.png`} 
-                        className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-700" 
-                        onError={(e) => (e.currentTarget.src = 'https://loremflickr.com/400/400/dairy?lock=' + product.externalId)}
+                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" 
+                        alt={product.name} 
+                        onError={(e) => { (e.currentTarget.src = 'https://loremflickr.com/400/400/dairy?lock=' + product.externalId) }}
                       />
                     </div>
-                    <div className="p-6 flex-grow flex flex-col">
-                      <h3 className="font-bold text-sm mb-4 line-clamp-2 h-10 leading-snug">{product.name}</h3>
-                      <div className="mt-auto flex justify-between items-center">
-                        <span className="font-black text-2xl tracking-tight">{product.price} ₸</span>
-                        <button onClick={() => addToCart(product)} className="bg-green-500 text-white p-3.5 rounded-2xl hover:bg-green-600 shadow-lg shadow-green-500/20 active:scale-90 transition-all">
-                          <Plus size={20} strokeWidth={4} />
+                    <div className="p-4 flex flex-col flex-grow">
+                      <h3 className="font-bold text-sm h-10 overflow-hidden line-clamp-2 mb-2 leading-snug">{product.name}</h3>
+                      <div className="mt-auto flex items-center justify-between">
+                        <p className="font-black text-xl">{product.price} ₸</p>
+                        <button onClick={() => addToCart(product)} className="bg-[#121417] dark:bg-green-600 text-white p-2.5 rounded-xl hover:bg-[#28A745] transition-colors active:scale-90">
+                          <Plus size={20} strokeWidth={3} />
                         </button>
                       </div>
                     </div>
@@ -158,36 +158,40 @@ function App() {
             )}
           </div>
 
-          {/* Корзина — Теперь выглядит как плавающая карточка */}
           <div className="lg:col-span-1">
-            <div className={`${theme.cartBg} p-8 rounded-[40px] sticky top-28`}>
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-black tracking-tight">Заказ</h2>
-                {cart.length > 0 && <button onClick={() => setCart([])} className="text-red-500 text-[10px] font-black uppercase tracking-wider">Clear</button>}
+            <div className={`${isDark ? 'bg-[#1a1d21]' : 'bg-white'} p-5 rounded-[30px] shadow-xl border border-gray-100 dark:border-gray-800 sticky top-24`}>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black tracking-tighter">Ваш заказ</h2>
+                {cart.length > 0 && (
+                  <button onClick={() => setCart([])} className="text-[#28A745] text-xs font-black uppercase tracking-widest">Clear</button>
+                )}
               </div>
-              {cart.length === 0 ? <p className={`${theme.muted} text-center py-10 font-bold`}>Ваша корзина пуста</p> : (
-                <div className="space-y-6">
-                  <div className="max-h-[40vh] overflow-y-auto space-y-4 pr-2 scrollbar-hide">
+              
+              {cart.length === 0 ? (
+                <div className="text-center py-10 opacity-30 italic font-bold">Пусто</div>
+              ) : (
+                <div className="flex flex-col">
+                  <div className="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-1 scrollbar-hide">
                     {cart.map(item => (
-                      <div key={item.externalId} className="flex gap-4 items-center">
-                        <div className={`w-12 h-12 rounded-xl flex-shrink-0 p-2 ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                          <img src={`https://loremflickr.com/100/100/food?lock=${item.externalId}`} className="w-full h-full object-contain" />
+                      <div key={item.externalId} className="flex gap-3 items-center">
+                        <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-xl flex-shrink-0 flex items-center justify-center">
+                           <img src={`https://loremflickr.com/100/100/food?lock=${item.externalId}`} className="w-7 h-7 object-contain rounded" />
                         </div>
                         <div className="flex-grow">
-                          <p className="font-bold text-[12px] leading-none mb-1">{item.name}</p>
-                          <p className="text-green-500 font-black text-[11px]">{item.quantity} × {item.price} ₸</p>
+                          <p className="font-bold text-[11px] leading-tight">{item.name}</p>
+                          <p className="text-[10px] text-[#28A745] font-black">{item.quantity} шт × {item.price} ₸</p>
                         </div>
-                        <button onClick={() => removeFromCart(item)} className="text-gray-300 hover:text-red-500 transition-colors"><X size={18} /></button>
+                        <button onClick={() => removeFromCart(item)} className="text-gray-300 hover:text-red-500 p-1"><X size={16} /></button>
                       </div>
                     ))}
                   </div>
-                  <div className="pt-6 border-t border-gray-100 dark:border-gray-800">
-                    <div className="flex justify-between items-end mb-8">
-                      <span className={`${theme.muted} text-xs font-black uppercase`}>Итого</span>
-                      <span className="text-3xl font-black tracking-tighter">{total} ₸</span>
+                  <div className="border-t border-dashed pt-4 border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center mb-5 font-black">
+                      <span className={theme.muted}>Итого:</span>
+                      <span className="text-2xl">{total} ₸</span>
                     </div>
-                    <button className="w-full bg-green-500 text-white py-5 rounded-[24px] font-black text-lg flex justify-center items-center gap-2 hover:bg-green-600 shadow-xl shadow-green-500/30 transition-all active:scale-95">
-                      Оформить <ChevronRight size={22} />
+                    <button className="w-full bg-[#28A745] text-white py-4 rounded-2xl font-black text-lg hover:bg-[#218838] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-green-500/20">
+                      Заказать <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 </div>
