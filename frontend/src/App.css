@@ -1,12 +1,12 @@
-/* Убираем стандартные ограничения Vite */
+
 #root {
   width: 100%;
   margin: 0;
   padding: 0;
-  text-align: left; /* Исправляет баг с центровкой всего подряд */
+  text-align: left;
 }
 
-/* Плавный переход для смены темы */
+
 body {
   margin: 0;
   display: flex;
@@ -16,7 +16,7 @@ body {
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-/* Скрываем скроллбар, но оставляем возможность скроллить (для категорий) */
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
@@ -25,14 +25,14 @@ body {
   scrollbar-width: none;
 }
 
-/* Чтобы картинки всегда были по центру контейнера */
+
 img {
   max-width: 100%;
   height: auto;
   user-select: none;
 }
 
-/* Убираем лишние отступы у кнопок, которые дает браузер */
+
 button {
   cursor: pointer;
   border: none;

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, X, Loader2, ChevronRight, Moon, Sun, Store } from 'lucide-react';
 import api from './api';
 
-// Импорт картинок-заглушек (замени на свои пути в assets)
+
 import milkImg from './assets/products/milk.png';
 import kefirImg from './assets/products/kefir.png';
 import smetanaImg from './assets/products/smetana.png';
