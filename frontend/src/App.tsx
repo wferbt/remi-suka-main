@@ -13,12 +13,13 @@ type CartItem = Product & {
   quantity: number;
 };
 
+// ОБНОВЛЕННЫЕ ПУТИ К ТВОИМ КАРТИНКАМ
 const CATEGORIES = [
   { id: '', name: 'Все', img: 'https://cdn-icons-png.flaticon.com/512/2331/2331970.png' },
-  { id: 'Молоко', name: 'Молоко', img: 'https://cdn-icons-png.flaticon.com/512/869/869476.png' },
-  { id: 'Кефир', name: 'Кефир', img: 'https://cdn-icons-png.flaticon.com/512/6129/6129819.png' },
-  { id: 'Сметана', name: 'Сметана', img: 'https://cdn-icons-png.flaticon.com/512/2619/2619536.png' },
-  { id: 'Творог', name: 'Творог', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909783.png' },
+  { id: 'Молоко', name: 'Молоко', img: '/products/молоко.png' },
+  { id: 'Кефир', name: 'Кефир', img: '/products/кефир.png' },
+  { id: 'Сметана', name: 'Сметана', img: '/products/сметана.png' },
+  { id: 'Творог', name: 'Творог', img: '/products/творог.png' },
 ];
 
 function App() {
@@ -114,7 +115,7 @@ function App() {
                     ? 'border-[#E63946] bg-white scale-105 shadow-red-500/10' 
                     : `${isDark ? 'bg-[#1a1d21] border-transparent' : 'bg-white border-transparent'}`
                 }`}>
-                  <img src={cat.img} alt={cat.name} className="w-10 h-10 object-contain" />
+                  <img src={cat.img} alt={cat.name} className="w-10 h-10 object-cover" />
                 </div>
                 <span className={`text-[11px] font-black ${selectedCategory === cat.id ? theme.accent : 'text-gray-400'}`}>
                   {cat.name}
@@ -137,7 +138,7 @@ function App() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {products.filter(p => p.name.toLowerCase().includes(selectedCategory.toLowerCase())).map(product => (
                   <div key={product.externalId} className={`${theme.card} rounded-[24px] overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col group transition-transform hover:-translate-y-1`}>
-                    <div className="h-40 bg-[#F1F3F5] dark:bg-[#121417] flex items-center justify-center p-4 overflow-hidden relative">
+                    <div className="h-40 bg-white dark:bg-[#121417] flex items-center justify-center p-4 overflow-hidden relative">
                       <img 
                         src={`/products/${product.externalId}.png`} 
                         className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" 
@@ -177,7 +178,7 @@ function App() {
                     {cart.map(item => (
                       <div key={item.externalId} className="flex gap-3 items-center">
                         <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-xl flex-shrink-0 flex items-center justify-center p-1">
-                           <img src={`https://loremflickr.com/100/100/food?lock=${item.externalId}`} className="w-full h-full object-contain rounded" />
+                           <img src={`/products/${item.externalId}.png`} className="w-full h-full object-contain rounded" onError={(e) => { e.currentTarget.src = 'https://loremflickr.com/100/100/food' }} />
                         </div>
                         <div className="flex-grow">
                           <p className="font-bold text-[11px] leading-tight line-clamp-1">{item.name}</p>
