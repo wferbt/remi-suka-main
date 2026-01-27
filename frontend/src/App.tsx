@@ -40,12 +40,17 @@ function App() {
   );
 
   
-  const addToCart = (product: Product) => {
+ const addToCart = (product: Product) => {
     setCart(prev => {
-      const existing = prev.find(item => item.externalId === product.externalId);
+     
+      const existing = prev.find(item => 
+        (product.externalId && item.externalId === product.externalId) || 
+        (item.name === product.name)
+      );
+
       if (existing) {
         return prev.map(item => 
-          item.externalId === product.externalId 
+          ((product.externalId && item.externalId === product.externalId) || (item.name === product.name))
             ? { ...item, quantity: item.quantity + 1 } 
             : item
         );
@@ -54,10 +59,11 @@ function App() {
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.externalId !== id));
+ const removeFromCart = (externalId: string) => {
+    // Если удаляем по имени, можно передать name в функцию, 
+    // но пока просто поправим поиск по ID
+    setCart(prev => prev.filter(item => item.externalId !== externalId));
   };
-
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const checkout = async () => {
