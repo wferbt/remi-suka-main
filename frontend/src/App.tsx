@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, X, Loader2, ChevronRight, Moon, Sun } from 'lucide-react';
+import { ShoppingCart, Plus, X, Loader2, ChevronRight, Moon, Sun, Store } from 'lucide-react';
 import api from './api';
 
 type Product = {
@@ -73,6 +73,8 @@ function App() {
     card: isDark ? 'bg-[#1a1d21] border-gray-800 shadow-xl' : 'bg-white border-transparent shadow-sm',
     text: isDark ? 'text-white' : 'text-[#212529]',
     muted: isDark ? 'text-gray-500' : 'text-gray-400',
+    accent: 'text-[#E63946]',
+    accentBg: 'bg-[#E63946]'
   };
 
   return (
@@ -80,10 +82,10 @@ function App() {
       <nav className={`${theme.nav} sticky top-0 z-50 border-b h-16 shadow-md`}>
         <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-[#28A745] p-1.5 rounded-xl shadow-lg shadow-green-900/20">
-              <span className="text-white font-black">G</span>
+            <div className={`${theme.accentBg} p-1.5 rounded-xl shadow-lg shadow-red-900/20`}>
+              <Store className="text-white" size={20} />
             </div>
-            <span className="text-xl font-black tracking-tighter text-[#28A745]">GreenFood</span>
+            <span className={`text-xl font-black tracking-tighter ${theme.accent}`}>Aul Market</span>
           </div>
           <div className="flex items-center gap-4">
             <button onClick={() => setIsDark(!isDark)} className="p-2 rounded-xl bg-gray-500/10 hover:bg-gray-500/20 transition-all">
@@ -92,7 +94,7 @@ function App() {
             <div className="relative p-2.5 bg-gray-500/10 rounded-xl">
               <ShoppingCart size={22} className={isDark ? 'text-gray-300' : 'text-gray-700'} />
               {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#FF3B30] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white dark:border-[#121417]">
+                <span className="absolute -top-1 -right-1 bg-[#E63946] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white dark:border-[#121417]">
                   {cart.reduce((a, b) => a + b.quantity, 0)}
                 </span>
               )}
@@ -109,12 +111,12 @@ function App() {
               <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className="flex-shrink-0 flex flex-col items-center group">
                 <div className={`w-16 h-16 rounded-[22px] flex items-center justify-center mb-2 transition-all duration-300 border-2 overflow-hidden shadow-sm ${
                   selectedCategory === cat.id 
-                    ? 'border-[#28A745] bg-white scale-105 shadow-green-500/10' 
+                    ? 'border-[#E63946] bg-white scale-105 shadow-red-500/10' 
                     : `${isDark ? 'bg-[#1a1d21] border-transparent' : 'bg-white border-transparent'}`
                 }`}>
                   <img src={cat.img} alt={cat.name} className="w-10 h-10 object-contain" />
                 </div>
-                <span className={`text-[11px] font-black ${selectedCategory === cat.id ? 'text-[#28A745]' : 'text-gray-400'}`}>
+                <span className={`text-[11px] font-black ${selectedCategory === cat.id ? theme.accent : 'text-gray-400'}`}>
                   {cat.name}
                 </span>
               </button>
@@ -125,12 +127,12 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
             <div className="flex items-center justify-between mb-6 px-1">
-              <h2 className="text-2xl font-black tracking-tighter">{selectedCategory || 'Все продукты'}</h2>
-              <span className={`text-sm font-bold ${theme.muted}`}>{products.filter(p => p.name.includes(selectedCategory)).length} товаров</span>
+              <h2 className="text-2xl font-black tracking-tighter">{selectedCategory || 'Каталог товаров'}</h2>
+              <span className={`text-sm font-bold ${theme.muted}`}>{products.filter(p => p.name.includes(selectedCategory)).length} шт.</span>
             </div>
             
             {loading ? (
-              <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#28A745]" size={40} /></div>
+              <div className="flex justify-center py-20"><Loader2 className={`animate-spin ${theme.accent}`} size={40} /></div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {products.filter(p => p.name.toLowerCase().includes(selectedCategory.toLowerCase())).map(product => (
@@ -146,9 +148,8 @@ function App() {
                     <div className="p-4 flex flex-col flex-grow">
                       <h3 className="font-bold text-sm h-10 overflow-hidden line-clamp-2 mb-2 leading-snug">{product.name}</h3>
                       <div className="mt-auto flex items-center justify-between">
-                        {/* ЦЕНА ТЕПЕРЬ font-bold */}
                         <p className="font-bold text-xl">{product.price} ₸</p>
-                        <button onClick={() => addToCart(product)} className="bg-[#121417] dark:bg-green-600 text-white p-2.5 rounded-xl hover:bg-[#28A745] transition-colors active:scale-90 shadow-md">
+                        <button onClick={() => addToCart(product)} className={`bg-[#212529] dark:bg-[#E63946] text-white p-2.5 rounded-xl hover:opacity-90 transition-all active:scale-90 shadow-md`}>
                           <Plus size={20} strokeWidth={3} />
                         </button>
                       </div>
@@ -162,38 +163,36 @@ function App() {
           <div className="lg:col-span-1">
             <div className={`${isDark ? 'bg-[#1a1d21]' : 'bg-white shadow-2xl'} p-5 rounded-[30px] border border-gray-100 dark:border-gray-800 sticky top-24`}>
               <div className="flex items-center justify-between mb-6">
-                {/* ВАШ ЗАКАЗ ТЕПЕРЬ font-bold */}
-                <h2 className="text-xl font-bold tracking-tighter text-[#28A745]">Ваш заказ</h2>
+                <h2 className={`text-xl font-bold tracking-tighter ${theme.accent}`}>Ваш заказ</h2>
                 {cart.length > 0 && (
-                  <button onClick={() => setCart([])} className="text-[#28A745] text-xs font-black uppercase tracking-widest">CLEAR</button>
+                  <button onClick={() => setCart([])} className={`${theme.accent} text-xs font-black uppercase tracking-widest`}>Очистить</button>
                 )}
               </div>
               
               {cart.length === 0 ? (
-                <div className="text-center py-10 opacity-30 italic font-bold">Пусто</div>
+                <div className="text-center py-10 opacity-30 italic font-bold text-sm">Корзина пуста</div>
               ) : (
                 <div className="flex flex-col">
                   <div className="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-1 scrollbar-hide">
                     {cart.map(item => (
                       <div key={item.externalId} className="flex gap-3 items-center">
-                        <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-xl flex-shrink-0 flex items-center justify-center">
-                           <img src={`https://loremflickr.com/100/100/food?lock=${item.externalId}`} className="w-7 h-7 object-contain rounded" />
+                        <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-xl flex-shrink-0 flex items-center justify-center p-1">
+                           <img src={`https://loremflickr.com/100/100/food?lock=${item.externalId}`} className="w-full h-full object-contain rounded" />
                         </div>
                         <div className="flex-grow">
                           <p className="font-bold text-[11px] leading-tight line-clamp-1">{item.name}</p>
-                          <p className="text-[10px] text-[#28A745] font-bold">{item.quantity} шт × {item.price} ₸</p>
+                          <p className={`text-[10px] ${theme.accent} font-bold`}>{item.quantity} шт × {item.price} ₸</p>
                         </div>
-                        <button onClick={() => removeFromCart(item)} className="text-gray-300 hover:text-red-500 p-1"><X size={16} /></button>
+                        <button onClick={() => removeFromCart(item)} className="text-gray-300 hover:text-red-600 p-1"><X size={16} /></button>
                       </div>
                     ))}
                   </div>
                   <div className="border-t border-dashed pt-4 border-gray-200 dark:border-gray-700">
                     <div className="flex justify-between items-center mb-5 font-bold">
                       <span className={theme.muted}>Итого:</span>
-                      {/* ИТОГО ТЕПЕРЬ font-bold */}
                       <span className="text-2xl">{total} ₸</span>
                     </div>
-                    <button className="w-full bg-[#28A745] text-white py-4 rounded-2xl font-black text-lg hover:bg-[#218838] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-green-500/20 active:scale-95">
+                    <button className={`${theme.accentBg} text-white w-full py-4 rounded-2xl font-black text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-red-500/20 active:scale-95`}>
                       Заказать <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
