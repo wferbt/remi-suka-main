@@ -49,7 +49,7 @@ function App() {
     api.get('/catalog').then(res => { 
       const safeProducts = res.data.map((p: ProductRaw, index: number) => ({
         ...p,
-        stock: p.stock !== undefined ? p.stock : 100,
+        stock: p.stock !== undefined ? p.stock : 10,
         uid: p.externalId || p.id || `prod-${index}-${Date.now()}`
       }));
       setProducts(safeProducts); 
