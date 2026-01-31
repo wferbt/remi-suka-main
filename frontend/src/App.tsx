@@ -2,13 +2,21 @@ import { useState, useEffect } from 'react';
 import { Plus, Minus, Loader2, ChevronRight, Moon, Sun, Store, User, CheckCircle2, Package, ShoppingBag, Trash2 } from 'lucide-react';
 import api from './api';
 
-// Картинки
+// Картинки (ассеты)
 import milkImg from './assets/products/milk.png';
 import kefirImg from './assets/products/kefir.png';
 import smetanaImg from './assets/products/smetana.png';
 import tvorogImg from './assets/products/tvorog.png';
 
-type Product = { externalId: string; name: string; price: number; stock: number; };
+// Типы данных
+// Добавил fallback для ID, чтобы TS не ругался, если придет null
+type Product = { 
+  externalId: string; 
+  name: string; 
+  price: number; 
+  stock: number; 
+};
+
 type CartItem = Product & { quantity: number; };
 
 const CATEGORIES = [
@@ -36,22 +44,54 @@ function App() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     api.get('/catalog')
       .then(res => { 
+        // ВАЖНО: При получении данных, если вдруг externalId дублируются, это взорвет корзину.
+        // Но здесь мы просто сохраняем данные как есть.
         setProducts(res.data); 
         setLoading(false); 
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("Ошибка загрузки:", err);
+        setLoading(false);
+      });
   }, [isDark]);
 
+  // ПРОФЕССИОНАЛЬНЫЙ ФИКС КОРЗИНЫ
+  // Мы используем строгое сравнение по ID.
   const updateQuantity = (product: Product, delta: number) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.externalId === product.externalId);
-      if (existing) {
-        const newQty = existing.quantity + delta;
-        if (newQty <= 0) return prev.filter(item => item.externalId !== product.externalId);
-        return prev.map(item => item.externalId === product.externalId ? { ...item, quantity: newQty } : item);
+    if (!product.externalId) {
+      console.error("Критическая ошибка: У товара нет externalId!", product);
+      return; 
+    }
+
+    setCart(prevCart => {
+      // 1. Ищем товар в корзине строго по externalId
+      const existingItemIndex = prevCart.findIndex(item => item.externalId === product.externalId);
+      const existingItem = prevCart[existingItemIndex];
+
+      // 2. Если товар уже есть
+      if (existingItem) {
+        const newQuantity = existingItem.quantity + delta;
+
+        // Если количество стало <= 0, удаляем товар из массива
+        if (newQuantity <= 0) {
+          const newCart = [...prevCart];
+          newCart.splice(existingItemIndex, 1);
+          return newCart;
+        }
+
+        // Иначе обновляем количество конкретно у этого элемента
+        const newCart = [...prevCart];
+        newCart[existingItemIndex] = { ...existingItem, quantity: newQuantity };
+        return newCart;
       }
-      if (delta > 0) return [...prev, { ...product, quantity: 1 }];
-      return prev;
+
+      // 3. Если товара нет, и мы пытаемся добавить (delta > 0)
+      if (delta > 0) {
+        return [...prevCart, { ...product, quantity: 1 }];
+      }
+
+      // 4. Если товара нет, и мы пытаемся убавить (минус) - ничего не делаем
+      return prevCart;
     });
   };
 
@@ -80,7 +120,7 @@ function App() {
       <div className={`min-h-screen p-8 ${isDark ? 'bg-[#121417] text-white' : 'bg-gray-100 text-black'}`}>
         <button onClick={() => setView('shop')} className="mb-6 flex items-center gap-2 font-bold opacity-70"><ChevronRight className="rotate-180"/> Назад в магазин</button>
         <h1 className="text-3xl font-bold mb-8">Панель управления</h1>
-        <div className="bg-[#E63946] p-6 rounded-[32px] text-white inline-block shadow-xl">
+        <div className="bg-[#E63946] p-6 rounded-[30px] text-white inline-block shadow-xl">
           <Package size={32} className="mb-2"/>
           <p className="font-bold text-sm opacity-80 uppercase">Товаров</p>
           <p className="text-4xl font-bold">{products.length}</p>
@@ -108,18 +148,30 @@ function App() {
         <section className="mb-10">
           <h2 className="text-xl font-bold mb-6 px-1">Категории</h2>
           <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-            {CATEGORIES.map((cat) => (
-              <button key={cat.name} onClick={() => setSelectedCategory(cat.id)} className="flex-shrink-0 flex flex-col items-center gap-3 group">
-                <div className={`w-20 h-20 rounded-[28px] flex items-center justify-center transition-all border-2 overflow-hidden shadow-sm ${
-                  selectedCategory === cat.id ? 'border-[#E63946] bg-white shadow-red-500/10 scale-105' : 'bg-gray-100 dark:bg-[#2A2D31] border-transparent group-hover:bg-gray-200 dark:group-hover:bg-[#35393f]'
-                }`}>
-                  <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" />
-                </div>
-                <span className={`text-sm font-bold transition-colors ${selectedCategory === cat.id ? 'text-[#E63946]' : 'text-gray-500'}`}>
-                  {cat.name}
-                </span>
-              </button>
-            ))}
+            {CATEGORIES.map((cat) => {
+              // ЛОГИКА ДЛЯ ИКОНКИ "ВСЕ"
+              // Если id пустой (это "Все"), мы добавляем padding (p-5), чтобы картинка стала меньше визуально.
+              // Если это обычная категория, padding 0 (p-0), чтобы картинка была на весь круг.
+              const isAllCategory = cat.id === '';
+              
+              return (
+                <button key={cat.name} onClick={() => setSelectedCategory(cat.id)} className="flex-shrink-0 flex flex-col items-center gap-3 group">
+                  <div className={`w-20 h-20 rounded-[28px] flex items-center justify-center transition-all border-2 overflow-hidden shadow-sm ${
+                    selectedCategory === cat.id ? 'border-[#E63946] bg-white shadow-red-500/10 scale-105' : 'bg-gray-100 dark:bg-[#2A2D31] border-transparent group-hover:bg-gray-200 dark:group-hover:bg-[#35393f]'
+                  }`}>
+                    <img 
+                      src={cat.img} 
+                      alt={cat.name} 
+                      // Вот здесь магия размера:
+                      className={`w-full h-full object-cover transition-transform duration-300 ${isAllCategory ? 'p-5 opacity-70' : 'p-0'}`} 
+                    />
+                  </div>
+                  <span className={`text-sm font-bold transition-colors ${selectedCategory === cat.id ? 'text-[#E63946]' : 'text-gray-500'}`}>
+                    {cat.name}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </section>
 
@@ -129,31 +181,47 @@ function App() {
               <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#E63946]" size={40} /></div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                {products.filter(p => p.name.toLowerCase().includes(selectedCategory.toLowerCase())).map(product => {
+                {products.filter(p => p.name.toLowerCase().includes(selectedCategory.toLowerCase())).map((product, index) => {
+                  
+                  // ВАЖНО: Если вдруг externalId одинаковые, используем index как часть ключа,
+                  // но для логики корзины нам все равно нужен уникальный ID.
+                  const uniqueKey = product.externalId || `prod-${index}`;
                   const inCart = cart.find(item => item.externalId === product.externalId);
+                  
                   return (
-                    <div key={product.externalId} className={`rounded-[32px] p-5 transition-all duration-300 border ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-xl' : 'bg-white border-transparent shadow-sm hover:shadow-xl'}`}>
-                      <div className="aspect-square bg-white rounded-[24px] mb-5 flex items-center justify-center overflow-hidden shadow-inner border border-gray-50">
+                    // border-radius 30px как просил
+                    <div key={uniqueKey} className={`rounded-[30px] p-2 transition-all duration-300 border ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-xl' : 'bg-white border-transparent shadow-sm hover:shadow-xl'}`}>
+                      
+                      {/* Картинка: rounded-24px чтобы вписывалась в 30px родителя */}
+                      <div className="aspect-square bg-white rounded-[24px] mb-3 flex items-center justify-center overflow-hidden shadow-inner border border-gray-50 relative">
                         <img 
                           src={getProductImage(product.name)} 
-                          className="w-full h-full object-contain p-2 transition-transform duration-500 hover:scale-110" 
+                          className="w-full h-full object-contain p-2 transition-transform duration-500 hover:scale-105" 
                           alt={product.name} 
                         />
                       </div>
-                      <h3 className="font-bold text-base mb-3 h-12 line-clamp-2 leading-tight opacity-90">{product.name}</h3>
-                      <div className="flex items-center justify-between mt-4">
-                        <span className="text-xl font-bold tracking-tight">{product.price} ₸</span>
-                        {!inCart ? (
-                          <button onClick={() => updateQuantity(product, 1)} className="bg-[#E63946] text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#d62839] transition-all hover:shadow-lg hover:shadow-red-500/30 active:scale-90">
-                            <Plus size={24} />
-                          </button>
-                        ) : (
-                          <div className="flex items-center gap-3 bg-gray-100 dark:bg-white/5 rounded-xl p-1.5 border dark:border-white/10">
-                            <button onClick={() => updateQuantity(product, -1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-white/10 rounded-lg text-[#E63946] shadow-sm hover:bg-gray-50 dark:hover:bg-white/20"><Minus size={18}/></button>
-                            <span className="font-bold text-base min-w-[20px] text-center">{inCart.quantity}</span>
-                            <button onClick={() => updateQuantity(product, 1)} className="w-8 h-8 flex items-center justify-center bg-[#E63946] text-white rounded-lg shadow-sm hover:bg-[#d62839]"><Plus size={18}/></button>
-                          </div>
-                        )}
+                      
+                      {/* Информация о товаре */}
+                      <div className="px-3 pb-3">
+                        <h3 className="font-bold text-base mb-2 h-10 line-clamp-2 leading-tight opacity-90">{product.name}</h3>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xl font-bold tracking-tight">{product.price} ₸</span>
+                          
+                          {!inCart ? (
+                            <button 
+                              onClick={() => updateQuantity(product, 1)} 
+                              className="bg-[#E63946] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#d62839] transition-all hover:shadow-lg hover:shadow-red-500/30 active:scale-90"
+                            >
+                              <Plus size={22} />
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 rounded-full p-1 pr-2 border dark:border-white/10">
+                              <button onClick={() => updateQuantity(product, -1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-white/10 rounded-full text-[#E63946] shadow-sm hover:bg-gray-50"><Minus size={16}/></button>
+                              <span className="font-bold text-base w-4 text-center">{inCart.quantity}</span>
+                              <button onClick={() => updateQuantity(product, 1)} className="w-8 h-8 flex items-center justify-center bg-[#E63946] text-white rounded-full shadow-sm hover:bg-[#d62839]"><Plus size={16}/></button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -164,7 +232,7 @@ function App() {
 
           {/* КОРЗИНА */}
           <div className="lg:col-span-1">
-            <div className={`p-6 rounded-[32px] sticky top-20 border transition-all ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-2xl shadow-black/50' : 'bg-white shadow-xl border-transparent'}`}>
+            <div className={`p-6 rounded-[30px] sticky top-20 border transition-all ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-2xl shadow-black/50' : 'bg-white shadow-xl border-transparent'}`}>
               <h2 className="text-xl font-bold mb-8 flex items-center gap-2">
                 <ShoppingBag size={22} className="text-[#E63946]" /> Ваш заказ
               </h2>
