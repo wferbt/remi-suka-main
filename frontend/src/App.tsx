@@ -30,7 +30,6 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
   
-  // Юзер и авторизация
   const [currentUser, setCurrentUser] = useState<UserData | null>(() => {
     const saved = localStorage.getItem('user_data');
     return saved ? JSON.parse(saved) : null;
@@ -43,7 +42,6 @@ function App() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [orders, setOrders] = useState<Order[]>(() => JSON.parse(localStorage.getItem('orders') || '[]'));
 
-  // Состояние для модалки карты
   const [showCardModal, setShowCardModal] = useState(false);
 
   useEffect(() => {
@@ -51,6 +49,7 @@ function App() {
     api.get('/catalog').then(res => { 
       const safeProducts = res.data.map((p: ProductRaw, index: number) => ({
         ...p,
+        stock: p.stock !== undefined ? p.stock : 100, // ПРИВЯЗКА К СКЛАДУ
         uid: p.externalId || p.id || `prod-${index}-${Date.now()}`
       }));
       setProducts(safeProducts); 
@@ -78,6 +77,14 @@ function App() {
   const updateQuantity = (product: Product, delta: number) => {
     setCart(prev => {
       const idx = prev.findIndex(item => item.uid === product.uid);
+      const currentInCart = idx !== -1 ? prev[idx].quantity : 0;
+
+      // ПРОВЕРКА СКЛАДА
+      if (delta > 0 && currentInCart + delta > product.stock) {
+        alert(`На складе всего ${product.stock} шт.`);
+        return prev;
+      }
+
       if (idx !== -1) {
         const newQty = prev[idx].quantity + delta;
         if (newQty <= 0) return prev.filter(item => item.uid !== product.uid);
@@ -90,7 +97,6 @@ function App() {
     });
   };
 
-  // Измененная функция handlePayment (теперь открывает карту)
   const handlePayment = () => {
     if (!currentUser) {
       setShowAuth(true);
@@ -99,12 +105,18 @@ function App() {
     setShowCardModal(true);
   };
 
-  // Функция финального подтверждения из окна карты
   const confirmPayment = (e: React.FormEvent) => {
     e.preventDefault();
     setShowCardModal(false);
     setIsPaying(true);
+    
     setTimeout(() => {
+      // ОБНОВЛЕНИЕ СКЛАДА ПОСЛЕ ПОКУПКИ
+      setProducts(prev => prev.map(p => {
+        const item = cart.find(c => c.uid === p.uid);
+        return item ? { ...p, stock: p.stock - item.quantity } : p;
+      }));
+
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
       const newOrder: Order = {
         id: Math.random().toString(36).substr(2, 7).toUpperCase(),
@@ -117,10 +129,9 @@ function App() {
       setPaymentSuccess(true);
       setCart([]);
       setTimeout(() => setPaymentSuccess(false), 3000);
-    }, 2000);
+    }, 1500);
   };
 
-  // --- ЛОГИКА АВТОРИЗАЦИИ (ИМИТАЦИЯ) ---
   const handleAuth = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -140,7 +151,6 @@ function App() {
       return;
     }
 
-    // Вход
     if (email === 'admin@mail.ru' && pass === 'admin') {
       setCurrentUser({ name: 'Администратор', email, isAdmin: true });
       setView('admin');
@@ -165,7 +175,7 @@ function App() {
         name: 'Вилен Google',
         email: 'vilen.it@google.com',
         isAdmin: false,
-        avatar: 'https://lh3.googleusercontent.com/a/ACg8ocL-...' 
+        avatar: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' 
       };
       setCurrentUser(googleUser);
       setLoading(false);
@@ -182,7 +192,6 @@ function App() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Дизайн картинки
   const getImg = (name: string) => {
     const n = name.toLowerCase();
     if (n.includes('молоко')) return milkImg;
@@ -192,7 +201,6 @@ function App() {
     return 'https://cdn-icons-png.flaticon.com/512/3081/3081840.png';
   };
 
-  // --- ЭКРАН ПРОФИЛЯ ---
   if (view === 'profile' && currentUser) {
     return (
       <div className={`min-h-screen p-6 ${isDark ? 'bg-[#121417] text-white' : 'bg-gray-50'}`}>
@@ -224,7 +232,6 @@ function App() {
     );
   }
 
-  // Админка
   if (view === 'admin' && currentUser?.isAdmin) {
     return (
       <div className={`min-h-screen p-8 ${isDark ? 'bg-[#121417] text-white' : 'bg-gray-50'}`}>
@@ -239,13 +246,14 @@ function App() {
           <div className="bg-white dark:bg-[#1a1d21] rounded-[35px] shadow-2xl overflow-hidden border dark:border-white/5">
              <table className="w-full text-left">
               <thead className="bg-gray-50 dark:bg-white/5 text-[10px] text-gray-400 uppercase tracking-widest">
-                <tr><th className="p-6">Товар</th><th className="p-6">Цена</th><th className="p-6 text-right">Удалить</th></tr>
+                <tr><th className="p-6">Товар</th><th className="p-6">Цена</th><th className="p-6">На складе</th><th className="p-6 text-right">Удалить</th></tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                 {products.map(p => (
                   <tr key={p.uid}>
                     <td className="p-6 font-bold">{p.name}</td>
                     <td className="p-6">{p.price} ₸</td>
+                    <td className={`p-6 font-bold ${p.stock < 10 ? 'text-red-500' : 'text-blue-500'}`}>{p.stock} шт.</td>
                     <td className="p-6 text-right"><button onClick={() => setProducts(prev => prev.filter(x => x.uid !== p.uid))} className="text-red-500 hover:scale-110 transition-transform"><Trash2 size={20}/></button></td>
                   </tr>
                 ))}
@@ -259,7 +267,6 @@ function App() {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#121417] text-white' : 'bg-[#F4F7F9] text-[#2D3436]'}`}>
-      {/* HEADER */}
       <nav className={`sticky top-0 z-50 border-b h-16 flex items-center px-4 justify-between backdrop-blur-md ${isDark ? 'bg-[#1a1d21]/90 border-white/10' : 'bg-white/90 border-black/5'}`}>
         <div className="flex items-center gap-2">
           <div className="bg-[#E63946] p-2 rounded-xl text-white shadow-lg shadow-red-500/20"><Store size={20} /></div>
@@ -280,7 +287,6 @@ function App() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* КАТЕГОРИИ */}
         <section className="mb-10 flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
           {CATEGORIES.map((cat) => (
             <button key={cat.name} onClick={() => setSelectedCategory(cat.id)} className="flex-shrink-0 flex flex-col items-center gap-2 group">
@@ -293,7 +299,6 @@ function App() {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* ТОВАРЫ */}
           <div className="lg:col-span-3">
             {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#E63946]" size={40} /></div> : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
@@ -307,9 +312,12 @@ function App() {
                       <div className="px-3 pb-3">
                         <h3 className="font-bold text-sm mb-2 h-10 line-clamp-2 leading-tight">{p.name}</h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-xl font-bold">{p.price} ₸</span>
+                          <div>
+                            <span className="text-xl font-bold block">{p.price} ₸</span>
+                            <span className={`text-[10px] font-bold ${p.stock < 10 ? 'text-red-500' : 'text-gray-400'}`}>Склад: {p.stock}</span>
+                          </div>
                           {!inCart ? (
-                            <button onClick={() => updateQuantity(p, 1)} className="bg-[#E63946] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#d62839] active:scale-90 transition-all shadow-md"><Plus size={22} /></button>
+                            <button onClick={() => updateQuantity(p, 1)} disabled={p.stock <= 0} className="bg-[#E63946] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#d62839] active:scale-90 transition-all shadow-md disabled:bg-gray-300"><Plus size={22} /></button>
                           ) : (
                             <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 rounded-full p-1 pr-2 animate-in zoom-in duration-200">
                               <button onClick={() => updateQuantity(p, -1)} className="w-8 h-8 bg-white dark:bg-white/10 rounded-full text-[#E63946] flex items-center justify-center"><Minus size={16}/></button>
@@ -326,7 +334,6 @@ function App() {
             )}
           </div>
 
-          {/* КОРЗИНА */}
           <div className="lg:col-span-1">
             <div className={`p-6 rounded-[35px] sticky top-20 border transition-all ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-2xl' : 'bg-white shadow-xl border-transparent'}`}>
               <h2 className="text-xl font-bold mb-8 flex items-center gap-2 text-[#E63946]"><ShoppingBag size={22} /> Ваш заказ</h2>
@@ -375,7 +382,6 @@ function App() {
                   <input required type="text" placeholder="0000 0000 0000 0000" className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 outline-none border-2 border-transparent focus:border-blue-500 transition-all font-mono" />
                 </div>
               </div>
-              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Срок действия</label>
@@ -392,16 +398,8 @@ function App() {
                   </div>
                 </div>
               </div>
-
-              <div className="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10">
-                <div className="flex justify-between items-center font-bold">
-                  <span className="text-sm text-gray-500">К оплате:</span>
-                  <span className="text-lg text-blue-500">{total} ₸</span>
-                </div>
-              </div>
-
               <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">
-                Оплатить сейчас
+                Списать {total} ₸
               </button>
             </form>
           </div>
