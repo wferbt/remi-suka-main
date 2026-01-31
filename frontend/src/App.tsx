@@ -49,7 +49,7 @@ function App() {
     api.get('/catalog').then(res => { 
       const safeProducts = res.data.map((p: ProductRaw, index: number) => ({
         ...p,
-        stock: p.stock !== undefined ? p.stock : 10, // ПРИВЯЗКА К СКЛАДУ
+        stock: p.stock !== undefined ? p.stock : 100,
         uid: p.externalId || p.id || `prod-${index}-${Date.now()}`
       }));
       setProducts(safeProducts); 
@@ -79,9 +79,8 @@ function App() {
       const idx = prev.findIndex(item => item.uid === product.uid);
       const currentInCart = idx !== -1 ? prev[idx].quantity : 0;
 
-      // ПРОВЕРКА СКЛАДА
       if (delta > 0 && currentInCart + delta > product.stock) {
-        alert(`На складе всего ${product.stock} шт.`);
+        alert(`Извините, в наличии осталось только ${product.stock} шт.`);
         return prev;
       }
 
@@ -111,10 +110,9 @@ function App() {
     setIsPaying(true);
     
     setTimeout(() => {
-      // ОБНОВЛЕНИЕ СКЛАДА ПОСЛЕ ПОКУПКИ
       setProducts(prev => prev.map(p => {
-        const item = cart.find(c => c.uid === p.uid);
-        return item ? { ...p, stock: p.stock - item.quantity } : p;
+        const itemInCart = cart.find(c => c.uid === p.uid);
+        return itemInCart ? { ...p, stock: p.stock - itemInCart.quantity } : p;
       }));
 
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -216,7 +214,7 @@ function App() {
              <button onClick={handleLogout} className="px-6 py-2 bg-red-500/10 text-red-500 rounded-xl font-bold text-sm hover:bg-red-500 hover:text-white transition-all">Выйти из аккаунта</button>
           </div>
 
-          <h2 className="text-xl font-bold mb-6">История заказов</h2>
+          <h2 className="text-xl font-bold mb-6 text-center sm:text-left">История чеков</h2>
           <div className="space-y-4">
             {orders.length === 0 && <p className="text-gray-500 italic">Заказов пока не было</p>}
             {orders.map(order => (
@@ -237,24 +235,28 @@ function App() {
       <div className={`min-h-screen p-8 ${isDark ? 'bg-[#121417] text-white' : 'bg-gray-50'}`}>
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Панель администратора</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Управление складом</h1>
             <div className="flex gap-3">
               <button onClick={() => setView('shop')} className="px-5 py-2.5 bg-gray-200 dark:bg-white/10 rounded-2xl font-bold">Магазин</button>
-              <button onClick={handleLogout} className="px-5 py-2.5 bg-[#E63946] text-white rounded-2xl font-bold">Выход</button>
+              <button onClick={handleLogout} className="px-5 py-2.5 bg-[#E63946] text-white rounded-2xl font-bold shadow-lg shadow-red-500/20">Выход</button>
             </div>
           </div>
           <div className="bg-white dark:bg-[#1a1d21] rounded-[35px] shadow-2xl overflow-hidden border dark:border-white/5">
              <table className="w-full text-left">
               <thead className="bg-gray-50 dark:bg-white/5 text-[10px] text-gray-400 uppercase tracking-widest">
-                <tr><th className="p-6">Товар</th><th className="p-6">Цена</th><th className="p-6">На складе</th><th className="p-6 text-right">Удалить</th></tr>
+                <tr><th className="p-6">Наименование</th><th className="p-6">Цена</th><th className="p-6">В наличии</th><th className="p-6 text-right">Удалить</th></tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                 {products.map(p => (
-                  <tr key={p.uid}>
+                  <tr key={p.uid} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                     <td className="p-6 font-bold">{p.name}</td>
                     <td className="p-6">{p.price} ₸</td>
-                    <td className={`p-6 font-bold ${p.stock < 10 ? 'text-red-500' : 'text-blue-500'}`}>{p.stock} шт.</td>
-                    <td className="p-6 text-right"><button onClick={() => setProducts(prev => prev.filter(x => x.uid !== p.uid))} className="text-red-500 hover:scale-110 transition-transform"><Trash2 size={20}/></button></td>
+                    <td className="p-6">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${p.stock < 10 ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                        {p.stock} шт.
+                      </span>
+                    </td>
+                    <td className="p-6 text-right"><button onClick={() => setProducts(prev => prev.filter(x => x.uid !== p.uid))} className="text-red-500 hover:scale-125 transition-transform inline-block"><Trash2 size={20}/></button></td>
                   </tr>
                 ))}
               </tbody>
@@ -274,11 +276,11 @@ function App() {
         </div>
         <div className="flex-1 max-w-sm mx-4 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
-          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Поиск вкусняшек..." className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 outline-none text-sm focus:ring-1 ring-[#E63946] transition-all" />
+          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Поиск по продуктам..." className="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 outline-none text-sm focus:ring-1 ring-[#E63946] transition-all" />
         </div>
         <div className="flex items-center gap-2">
           {currentUser?.isAdmin && <button onClick={() => setView('admin')} className="px-3 py-1.5 bg-[#E63946] text-white rounded-lg font-bold text-[10px]">ADMIN</button>}
-          <button onClick={() => setIsDark(!isDark)} className="p-2 rounded-lg bg-gray-500/10">{isDark ? <Sun size={20} /> : <Moon size={20} />}</button>
+          <button onClick={() => setIsDark(!isDark)} className="p-2 rounded-lg bg-gray-500/10 transition-colors">{isDark ? <Sun size={20} /> : <Moon size={20} />}</button>
           <button onClick={() => currentUser ? setView('profile') : (setAuthMode('login'), setShowAuth(true))} className="p-2 rounded-lg bg-gray-500/10 flex items-center gap-2 hover:bg-[#E63946]/10 transition-colors">
             {currentUser?.avatar ? <img src={currentUser.avatar} className="w-5 h-5 rounded-full" /> : <User size={20} />} 
             {currentUser && <span className="text-xs font-bold hidden md:block">{currentUser.name}</span>}
@@ -305,24 +307,31 @@ function App() {
                 {filteredProducts.map((p) => {
                   const inCart = cart.find(i => i.uid === p.uid);
                   return (
-                    <div key={p.uid} className={`card-container p-2 border transition-all duration-300 ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white border-transparent shadow-sm hover:shadow-lg'}`}>
-                      <div className="image-container aspect-square bg-white mb-3 flex items-center justify-center border border-gray-50">
-                        <img src={getImg(p.name)} className="w-full h-full object-contain p-2 transition-transform hover:scale-110" />
+                    <div key={p.uid} className={`card-container p-2 border transition-all duration-300 ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white border-transparent shadow-sm hover:shadow-lg hover:-translate-y-1'}`}>
+                      <div className="image-container aspect-square bg-white mb-3 flex items-center justify-center border border-gray-50 relative">
+                        <img src={getImg(p.name)} className="w-full h-full object-contain p-2 transition-transform hover:scale-105" />
+                        {p.stock <= 0 && (
+                          <div className="absolute inset-0 bg-white/60 dark:bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
+                            <span className="bg-black text-white text-[10px] font-bold px-3 py-1 rounded-full">ЗАКОНЧИЛСЯ</span>
+                          </div>
+                        )}
                       </div>
                       <div className="px-3 pb-3">
                         <h3 className="font-bold text-sm mb-2 h-10 line-clamp-2 leading-tight">{p.name}</h3>
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="text-xl font-bold block">{p.price} ₸</span>
-                            <span className={`text-[10px] font-bold ${p.stock < 10 ? 'text-red-500' : 'text-gray-400'}`}>Склад: {p.stock}</span>
+                            <span className={`text-[10px] font-bold ${p.stock <= 5 ? 'text-red-500' : 'text-green-500 opacity-80'}`}>
+                              {p.stock <= 0 ? 'Нет в наличии' : p.stock <= 5 ? `Мало: ${p.stock} шт.` : `В наличии: ${p.stock} шт.`}
+                            </span>
                           </div>
                           {!inCart ? (
-                            <button onClick={() => updateQuantity(p, 1)} disabled={p.stock <= 0} className="bg-[#E63946] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#d62839] active:scale-90 transition-all shadow-md disabled:bg-gray-300"><Plus size={22} /></button>
+                            <button onClick={() => updateQuantity(p, 1)} disabled={p.stock <= 0} className="bg-[#E63946] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#d62839] active:scale-90 transition-all shadow-md disabled:bg-gray-300 disabled:shadow-none"><Plus size={22} /></button>
                           ) : (
                             <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 rounded-full p-1 pr-2 animate-in zoom-in duration-200">
-                              <button onClick={() => updateQuantity(p, -1)} className="w-8 h-8 bg-white dark:bg-white/10 rounded-full text-[#E63946] flex items-center justify-center"><Minus size={16}/></button>
+                              <button onClick={() => updateQuantity(p, -1)} className="w-8 h-8 bg-white dark:bg-white/10 rounded-full text-[#E63946] flex items-center justify-center hover:shadow-sm"><Minus size={16}/></button>
                               <span className="font-bold text-base w-4 text-center">{inCart.quantity}</span>
-                              <button onClick={() => updateQuantity(p, 1)} className="w-8 h-8 bg-[#E63946] text-white rounded-full flex items-center justify-center"><Plus size={16}/></button>
+                              <button onClick={() => updateQuantity(p, 1)} className="w-8 h-8 bg-[#E63946] text-white rounded-full flex items-center justify-center hover:bg-[#d62839]"><Plus size={16}/></button>
                             </div>
                           )}
                         </div>
@@ -336,45 +345,45 @@ function App() {
 
           <div className="lg:col-span-1">
             <div className={`p-6 rounded-[35px] sticky top-20 border transition-all ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-2xl' : 'bg-white shadow-xl border-transparent'}`}>
-              <h2 className="text-xl font-bold mb-8 flex items-center gap-2 text-[#E63946]"><ShoppingBag size={22} /> Ваш заказ</h2>
+              <h2 className="text-xl font-bold mb-8 flex items-center gap-2 text-[#E63946]"><ShoppingBag size={22} /> Корзина</h2>
               {!paymentSuccess ? (
                 <>
                   <div className="space-y-4 mb-8 max-h-[50vh] overflow-y-auto scrollbar-hide">
                     {cart.map(item => (
                       <div key={item.uid} className="flex flex-col gap-3 p-4 bg-gray-50/50 dark:bg-white/5 rounded-[24px] relative border dark:border-white/5">
-                        <div className="flex justify-between items-start"><p className="text-xs font-bold leading-tight pr-6">{item.name}</p><button onClick={() => updateQuantity(item, -item.quantity)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button></div>
+                        <div className="flex justify-between items-start"><p className="text-xs font-bold leading-tight pr-6">{item.name}</p><button onClick={() => updateQuantity(item, -item.quantity)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={16} /></button></div>
                         <div className="flex justify-between items-center"><p className="text-[#E63946] font-bold">{item.price * item.quantity} ₸</p><div className="flex items-center gap-2 bg-white dark:bg-black/20 p-1 rounded-lg"><button onClick={() => updateQuantity(item, -1)} className="w-7 h-7 flex items-center justify-center rounded-md bg-gray-100 dark:bg-white/10"><Minus size={14}/></button><span className="text-xs font-bold w-4 text-center">{item.quantity}</span><button onClick={() => updateQuantity(item, 1)} className="w-7 h-7 flex items-center justify-center rounded-md bg-[#E63946] text-white"><Plus size={14}/></button></div></div>
                       </div>
                     ))}
-                    {cart.length === 0 && <p className="text-center py-10 text-gray-400 italic text-sm">Корзина пуста</p>}
+                    {cart.length === 0 && <p className="text-center py-10 text-gray-400 italic text-sm">Здесь пока пусто...</p>}
                   </div>
                   <div className="border-t-2 border-dashed border-gray-100 dark:border-white/10 pt-6">
-                    <div className="flex justify-between mb-6 font-bold uppercase text-xs tracking-wider"><span>Итого</span><span className="text-2xl text-[#E63946] tracking-tighter">{total} ₸</span></div>
-                    <button onClick={handlePayment} disabled={cart.length === 0 || isPaying} className="w-full py-5 bg-[#E63946] text-white rounded-2xl font-bold flex items-center justify-center gap-2 uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95 transition-all">{isPaying ? <Loader2 className="animate-spin"/> : 'Оплатить'}</button>
+                    <div className="flex justify-between mb-6 font-bold uppercase text-xs tracking-wider"><span>К оплате</span><span className="text-2xl text-[#E63946] tracking-tighter">{total} ₸</span></div>
+                    <button onClick={handlePayment} disabled={cart.length === 0 || isPaying} className="w-full py-5 bg-[#E63946] text-white rounded-2xl font-bold flex items-center justify-center gap-2 uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95 transition-all disabled:opacity-50">{isPaying ? <Loader2 className="animate-spin"/> : 'Оформить заказ'}</button>
                   </div>
                 </>
               ) : (
-                <div className="py-10 text-center animate-in zoom-in"><CheckCircle2 className="text-green-500 mx-auto mb-4" size={50} /><h3 className="text-xl font-bold mb-2">Оплачено!</h3><button onClick={() => setView('profile')} className="text-[#E63946] text-sm font-bold underline">Посмотреть чек</button></div>
+                <div className="py-10 text-center animate-in zoom-in slide-in-from-bottom-4"><CheckCircle2 className="text-green-500 mx-auto mb-4" size={60} /><h3 className="text-xl font-bold mb-2">Успешно!</h3><button onClick={() => setView('profile')} className="text-[#E63946] text-sm font-bold hover:underline">Где мой чек?</button></div>
               )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* --- МОДАЛКА ОПЛАТЫ КАРТОЙ --- */}
+      {/* МОДАЛКА ОПЛАТЫ */}
       {showCardModal && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className={`relative w-full max-w-md p-8 rounded-[40px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'}`}>
-            <button onClick={() => setShowCardModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-red-500"><X size={24}/></button>
-            <div className="flex items-center gap-3 mb-6">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className={`relative w-full max-w-md p-8 rounded-[40px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'} animate-in zoom-in duration-300`}>
+            <button onClick={() => setShowCardModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors"><X size={24}/></button>
+            <div className="flex items-center gap-3 mb-8">
               <div className="p-3 bg-blue-500/10 text-blue-500 rounded-2xl"><CreditCard size={24}/></div>
               <div>
-                <h2 className="text-xl font-bold">Оплата картой</h2>
-                <p className="text-xs text-gray-500">Безопасная транзакция</p>
+                <h2 className="text-xl font-bold tracking-tight">Оплата заказа</h2>
+                <p className="text-xs text-gray-500">Введите данные вашей карты</p>
               </div>
             </div>
             
-            <form onSubmit={confirmPayment} className="space-y-4">
+            <form onSubmit={confirmPayment} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Номер карты</label>
                 <div className="relative">
@@ -384,7 +393,7 @@ function App() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Срок действия</label>
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Срок</label>
                   <div className="relative">
                     <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
                     <input required type="text" placeholder="ММ/ГГ" className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 outline-none border-2 border-transparent focus:border-blue-500 transition-all font-mono" />
@@ -398,26 +407,26 @@ function App() {
                   </div>
                 </div>
               </div>
-              <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">
-                Списать {total} ₸
+              <button type="submit" className="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 active:scale-[0.98] transition-all">
+                Оплатить {total} ₸
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* --- МОДАЛКА АВТОРИЗАЦИИ --- */}
+      {/* МОДАЛКА АВТОРИЗАЦИИ */}
       {showAuth && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className={`relative w-full max-w-sm p-8 rounded-[40px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'}`}>
-            <button onClick={() => setShowAuth(false)} className="absolute top-6 right-6 text-gray-400 hover:text-black dark:hover:text-white"><X size={24}/></button>
-            <h2 className="text-2xl font-bold mb-2 text-center uppercase tracking-tighter">{authMode === 'login' ? 'С возвращением!' : 'Создать аккаунт'}</h2>
-            <p className="text-gray-500 text-center text-xs mb-8">{authMode === 'login' ? 'Войдите в свой профиль' : 'Зарегистрируйтесь для покупок'}</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
+          <div className={`relative w-full max-w-sm p-8 rounded-[40px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'} animate-in zoom-in duration-300`}>
+            <button onClick={() => setShowAuth(false)} className="absolute top-6 right-6 text-gray-400 hover:text-black dark:hover:text-white transition-colors"><X size={24}/></button>
+            <h2 className="text-2xl font-bold mb-2 text-center uppercase tracking-tighter">{authMode === 'login' ? 'С возвращением!' : 'Новый аккаунт'}</h2>
+            <p className="text-gray-500 text-center text-xs mb-8">{authMode === 'login' ? 'Рады видеть вас снова' : 'Заполните данные для регистрации'}</p>
             
             <form onSubmit={handleAuth} className="space-y-4">
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-                <input required name="email" type="email" placeholder="Email (например, test@mail.ru)" className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 outline-none border-2 border-transparent focus:border-[#E63946] transition-all" />
+                <input required name="email" type="email" placeholder="Ваш Email" className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 outline-none border-2 border-transparent focus:border-[#E63946] transition-all" />
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
@@ -437,7 +446,7 @@ function App() {
               </button>
 
               <p className="text-center text-xs font-bold text-gray-500">
-                {authMode === 'login' ? 'Новый пользователь?' : 'Уже есть аккаунт?'} 
+                {authMode === 'login' ? 'Еще нет аккаунта?' : 'Уже зарегистрированы?'} 
                 <button onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')} className="text-[#E63946] ml-1 uppercase hover:underline">
                    {authMode === 'login' ? 'Регистрация' : 'Вход'}
                 </button>
