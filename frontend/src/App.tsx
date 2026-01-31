@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Minus, Loader2, Moon, Sun, Store, User, CheckCircle2, ShoppingBag, Trash2, X, Search, ChevronLeft, Mail, Lock } from 'lucide-react';
+import { Plus, Minus, Loader2, Moon, Sun, Store, User, CheckCircle2, ShoppingBag, Trash2, X, Search, ChevronLeft, Mail, Lock, CreditCard, Calendar, ShieldCheck } from 'lucide-react';
 import api from './api';
 
 // Картинки
@@ -42,6 +42,9 @@ function App() {
   const [isPaying, setIsPaying] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [orders, setOrders] = useState<Order[]>(() => JSON.parse(localStorage.getItem('orders') || '[]'));
+
+  // Состояние для модалки карты
+  const [showCardModal, setShowCardModal] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
@@ -87,11 +90,19 @@ function App() {
     });
   };
 
+  // Измененная функция handlePayment (теперь открывает карту)
   const handlePayment = () => {
     if (!currentUser) {
       setShowAuth(true);
       return;
     }
+    setShowCardModal(true);
+  };
+
+  // Функция финального подтверждения из окна карты
+  const confirmPayment = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowCardModal(false);
     setIsPaying(true);
     setTimeout(() => {
       const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -106,7 +117,7 @@ function App() {
       setPaymentSuccess(true);
       setCart([]);
       setTimeout(() => setPaymentSuccess(false), 3000);
-    }, 1500);
+    }, 2000);
   };
 
   // --- ЛОГИКА АВТОРИЗАЦИИ (ИМИТАЦИЯ) ---
@@ -342,6 +353,60 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* --- МОДАЛКА ОПЛАТЫ КАРТОЙ --- */}
+      {showCardModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className={`relative w-full max-w-md p-8 rounded-[40px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'}`}>
+            <button onClick={() => setShowCardModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-red-500"><X size={24}/></button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-blue-500/10 text-blue-500 rounded-2xl"><CreditCard size={24}/></div>
+              <div>
+                <h2 className="text-xl font-bold">Оплата картой</h2>
+                <p className="text-xs text-gray-500">Безопасная транзакция</p>
+              </div>
+            </div>
+            
+            <form onSubmit={confirmPayment} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Номер карты</label>
+                <div className="relative">
+                  <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                  <input required type="text" placeholder="0000 0000 0000 0000" className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 outline-none border-2 border-transparent focus:border-blue-500 transition-all font-mono" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">Срок действия</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                    <input required type="text" placeholder="ММ/ГГ" className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 outline-none border-2 border-transparent focus:border-blue-500 transition-all font-mono" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold text-gray-400 ml-1">CVC</label>
+                  <div className="relative">
+                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                    <input required type="password" placeholder="***" maxLength={3} className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-100 dark:bg-white/5 outline-none border-2 border-transparent focus:border-blue-500 transition-all font-mono" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10">
+                <div className="flex justify-between items-center font-bold">
+                  <span className="text-sm text-gray-500">К оплате:</span>
+                  <span className="text-lg text-blue-500">{total} ₸</span>
+                </div>
+              </div>
+
+              <button type="submit" className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">
+                Оплатить сейчас
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* --- МОДАЛКА АВТОРИЗАЦИИ --- */}
       {showAuth && (
