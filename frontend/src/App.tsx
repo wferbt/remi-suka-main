@@ -49,7 +49,7 @@ function App() {
     api.get('/catalog').then(res => { 
       const safeProducts = res.data.map((p: ProductRaw, index: number) => ({
         ...p,
-        stock: p.stock !== undefined ? p.stock : 100, // ПРИВЯЗКА К СКЛАДУ
+        stock: p.stock !== undefined ? p.stock : 10, // ПРИВЯЗКА К СКЛАДУ
         uid: p.externalId || p.id || `prod-${index}-${Date.now()}`
       }));
       setProducts(safeProducts); 
