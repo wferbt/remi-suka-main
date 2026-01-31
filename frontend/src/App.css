@@ -1,4 +1,3 @@
-
 #root {
   width: 100%;
   margin: 0;
@@ -6,16 +5,19 @@
   text-align: left;
 }
 
-
 body {
   margin: 0;
-  display: flex;
-  place-items: flex-start;
+  display: block; /* Поменял с flex-start для лучшей верстки */
   min-width: 320px;
   min-height: 100vh;
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/* Фикс для картинок, чтобы они не игнорировали скругления контейнера */
+.rounded-\[24px\], .rounded-\[28px\], .rounded-\[32px\] {
+  mask-image: -webkit-radial-gradient(white, black);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -25,13 +27,13 @@ body {
   scrollbar-width: none;
 }
 
-
 img {
-  max-width: 100%;
-  height: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Это заставляет картинку заполнить весь блок */
   user-select: none;
 }
-
 
 button {
   cursor: pointer;
