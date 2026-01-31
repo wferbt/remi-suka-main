@@ -33,6 +33,7 @@ img {
   height: 100%;
   object-fit: cover; /* Это заставляет картинку заполнить весь блок */
   user-select: none;
+  border-radius: 30px;
 }
 
 button {
