@@ -14,12 +14,12 @@ type CartItem = Product & { quantity: number; };
 type Order = { id: string; date: string; items: CartItem[]; total: number };
 type UserData = { name: string; email: string; isAdmin: boolean; avatar?: string };
 
+// КАТЕГОРИИ
 const CATEGORIES = [
   { id: '', name: 'Все', img: 'https://cdn-icons-png.flaticon.com/512/2331/2331970.png' },
-  { id: 'Молоко', name: 'Молоко', img: milkImg },
-  { id: 'Кефир', name: 'Кефир', img: kefirImg },
-  { id: 'Сметана', name: 'Сметана', img: smetanaImg },
-  { id: 'Творог', name: 'Творог', img: tvorogImg },
+  { id: 'молоко', name: 'Кисломолочка', img: milkImg },
+  { id: 'мясо', name: 'Мясо', img: 'https://cdn-icons-png.flaticon.com/512/3143/3143643.png' },
+  { id: 'крекер', name: 'Крекеры', img: 'https://cdn-icons-png.flaticon.com/512/3014/3014534.png' },
 ];
 
 function App() {
@@ -68,6 +68,7 @@ function App() {
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
+  
       const matchesCategory = p.name.toLowerCase().includes(selectedCategory.toLowerCase());
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
@@ -149,7 +150,7 @@ function App() {
       return;
     }
 
-    if (email === 'admin@mail.ru' && pass === 'admin') {
+    if (email === 'admin@gmail.com' && pass === 'admin') {
       setCurrentUser({ name: 'Администратор', email, isAdmin: true });
       setView('admin');
     } else {
@@ -170,8 +171,8 @@ function App() {
     setLoading(true);
     setTimeout(() => {
       const googleUser: UserData = {
-        name: 'Вилен Google',
-        email: 'vilen.it@google.com',
+        name: 'Name Google',
+        email: 'example@google.com',
         isAdmin: false,
         avatar: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' 
       };
@@ -196,6 +197,8 @@ function App() {
     if (n.includes('кефир')) return kefirImg;
     if (n.includes('сметана')) return smetanaImg;
     if (n.includes('творог')) return tvorogImg;
+    if (n.includes('мясо') || n.includes('колбаса') || n.includes('фарш')) return 'https://cdn-icons-png.flaticon.com/512/3143/3143643.png';
+    if (n.includes('крекер') || n.includes('печенье')) return 'https://cdn-icons-png.flaticon.com/512/3014/3014534.png';
     return 'https://cdn-icons-png.flaticon.com/512/3081/3081840.png';
   };
 
@@ -205,7 +208,7 @@ function App() {
         <div className="max-w-2xl mx-auto">
           <button onClick={() => setView('shop')} className="flex items-center gap-2 mb-8 font-bold text-[#E63946] hover:opacity-80"><ChevronLeft size={20}/> В магазин</button>
           
-          <div className={`p-8 rounded-[40px] border mb-8 flex flex-col items-center text-center ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white shadow-xl border-transparent'}`}>
+          <div className={`p-8 rounded-[30px] border mb-8 flex flex-col items-center text-center ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white shadow-xl border-transparent'}`}>
              <div className="w-24 h-24 bg-gray-100 dark:bg-white/10 rounded-full mb-4 flex items-center justify-center overflow-hidden border-4 border-[#E63946]/20">
                {currentUser.avatar ? <img src={currentUser.avatar} /> : <User size={40} className="text-[#E63946]" />}
              </div>
@@ -241,7 +244,7 @@ function App() {
               <button onClick={handleLogout} className="px-5 py-2.5 bg-[#E63946] text-white rounded-2xl font-bold shadow-lg shadow-red-500/20">Выход</button>
             </div>
           </div>
-          <div className="bg-white dark:bg-[#1a1d21] rounded-[35px] shadow-2xl overflow-hidden border dark:border-white/5">
+          <div className="bg-white dark:bg-[#1a1d21] rounded-[30px] shadow-2xl overflow-hidden border dark:border-white/5">
              <table className="w-full text-left">
               <thead className="bg-gray-50 dark:bg-white/5 text-[10px] text-gray-400 uppercase tracking-widest">
                 <tr><th className="p-6">Наименование</th><th className="p-6">Цена</th><th className="p-6">В наличии</th><th className="p-6 text-right">Удалить</th></tr>
@@ -292,8 +295,8 @@ function App() {
         <section className="mb-10 flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
           {CATEGORIES.map((cat) => (
             <button key={cat.name} onClick={() => setSelectedCategory(cat.id)} className="flex-shrink-0 flex flex-col items-center gap-2 group">
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all border-2 ${selectedCategory === cat.id ? 'border-[#E63946] bg-white scale-110 shadow-lg' : 'bg-gray-100 dark:bg-[#2A2D31] border-transparent group-hover:border-gray-300'}`}>
-                <img src={cat.img} alt={cat.name} className={`w-full h-full object-cover ${cat.id === '' ? 'p-3 opacity-50' : ''}`} />
+              <div className={`w-20 h-20 rounded-[24px] flex items-center justify-center transition-all border-2 overflow-hidden ${selectedCategory === cat.id ? 'border-[#E63946] bg-white scale-110 shadow-lg' : 'bg-gray-100 dark:bg-[#2A2D31] border-transparent group-hover:border-gray-300'}`}>
+                <img src={cat.img} alt={cat.name} className={`w-full h-full object-cover p-2 ${cat.id === '' ? 'opacity-50' : ''}`} />
               </div>
               <span className={`text-[10px] font-bold uppercase tracking-widest ${selectedCategory === cat.id ? 'text-[#E63946]' : 'text-gray-400'}`}>{cat.name}</span>
             </button>
@@ -307,8 +310,8 @@ function App() {
                 {filteredProducts.map((p) => {
                   const inCart = cart.find(i => i.uid === p.uid);
                   return (
-                    <div key={p.uid} className={`card-container p-2 border transition-all duration-300 ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white border-transparent shadow-sm hover:shadow-lg hover:-translate-y-1'}`}>
-                      <div className="image-container aspect-square bg-white mb-3 flex items-center justify-center border border-gray-50 relative">
+                    <div key={p.uid} className={`card-container p-2 border transition-all duration-300 rounded-[30px] ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white border-transparent shadow-sm hover:shadow-lg hover:-translate-y-1'}`}>
+                      <div className="image-container aspect-square bg-white mb-3 flex items-center justify-center border border-gray-50 relative rounded-[20px] overflow-hidden">
                         <img src={getImg(p.name)} className="w-full h-full object-contain p-2 transition-transform hover:scale-105" />
                         {p.stock <= 0 && (
                           <div className="absolute inset-0 bg-white/60 dark:bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
@@ -344,7 +347,7 @@ function App() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className={`p-6 rounded-[35px] sticky top-20 border transition-all ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-2xl' : 'bg-white shadow-xl border-transparent'}`}>
+            <div className={`p-6 rounded-[30px] sticky top-20 border transition-all ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-2xl' : 'bg-white shadow-xl border-transparent'}`}>
               <h2 className="text-xl font-bold mb-8 flex items-center gap-2 text-[#E63946]"><ShoppingBag size={22} /> Корзина</h2>
               {!paymentSuccess ? (
                 <>
@@ -370,10 +373,11 @@ function App() {
         </div>
       </main>
 
-      {/* МОДАЛКА ОПЛАТЫ */}
+      {/* МОДАЛКИ (Оплата и Авторизация) */}
       {showCardModal && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className={`relative w-full max-w-md p-8 rounded-[40px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'} animate-in zoom-in duration-300`}>
+          <div className={`relative w-full max-w-md p-8 rounded-[30px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'} animate-in zoom-in duration-300`}>
+            
             <button onClick={() => setShowCardModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors"><X size={24}/></button>
             <div className="flex items-center gap-3 mb-8">
               <div className="p-3 bg-blue-500/10 text-blue-500 rounded-2xl"><CreditCard size={24}/></div>
@@ -415,10 +419,10 @@ function App() {
         </div>
       )}
 
-      {/* МОДАЛКА АВТОРИЗАЦИИ */}
       {showAuth && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
-          <div className={`relative w-full max-w-sm p-8 rounded-[40px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'} animate-in zoom-in duration-300`}>
+          <div className={`relative w-full max-w-sm p-8 rounded-[30px] shadow-2xl border ${isDark ? 'bg-[#1a1d21] border-white/5' : 'bg-white'} animate-in zoom-in duration-300`}>
+         
             <button onClick={() => setShowAuth(false)} className="absolute top-6 right-6 text-gray-400 hover:text-black dark:hover:text-white transition-colors"><X size={24}/></button>
             <h2 className="text-2xl font-bold mb-2 text-center uppercase tracking-tighter">{authMode === 'login' ? 'С возвращением!' : 'Новый аккаунт'}</h2>
             <p className="text-gray-500 text-center text-xs mb-8">{authMode === 'login' ? 'Рады видеть вас снова' : 'Заполните данные для регистрации'}</p>
