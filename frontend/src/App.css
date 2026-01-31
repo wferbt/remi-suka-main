@@ -7,16 +7,32 @@
 
 body {
   margin: 0;
-  display: block; /* Поменял с flex-start для лучшей верстки */
+  display: block;
   min-width: 320px;
   min-height: 100vh;
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-/* Фикс для картинок, чтобы они не игнорировали скругления контейнера */
-.rounded-\[24px\], .rounded-\[28px\], .rounded-\[32px\] {
-  mask-image: -webkit-radial-gradient(white, black);
+/* Принудительное скругление карточек */
+.card-container {
+  border-radius: 30px !important;
+}
+
+/* Принудительное скругление картинки */
+.image-container {
+  border-radius: 24px !important;
+  overflow: hidden !important; /* Обрезает углы картинки */
+  mask-image: -webkit-radial-gradient(white, black); /* Фикс для Safari */
   -webkit-mask-image: -webkit-radial-gradient(white, black);
+  transform: translateZ(0); /* Фикс для мерцания */
+}
+
+/* Сама картинка */
+img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -25,15 +41,6 @@ body {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Это заставляет картинку заполнить весь блок */
-  user-select: none;
-  border-radius: 30px;
 }
 
 button {

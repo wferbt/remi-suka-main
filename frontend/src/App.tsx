@@ -2,21 +2,16 @@ import { useState, useEffect } from 'react';
 import { Plus, Minus, Loader2, ChevronRight, Moon, Sun, Store, User, CheckCircle2, Package, ShoppingBag, Trash2 } from 'lucide-react';
 import api from './api';
 
-// Картинки (ассеты)
+// Картинки
 import milkImg from './assets/products/milk.png';
 import kefirImg from './assets/products/kefir.png';
 import smetanaImg from './assets/products/smetana.png';
 import tvorogImg from './assets/products/tvorog.png';
 
-// Типы данных
-// Добавил fallback для ID, чтобы TS не ругался, если придет null
-type Product = { 
-  externalId: string; 
-  name: string; 
-  price: number; 
-  stock: number; 
-};
-
+// Типы
+type ProductRaw = { externalId?: string; id?: string; name: string; price: number; stock: number; };
+// Расширенный тип с гарантированным ID для фронтенда
+type Product = ProductRaw & { uid: string }; 
 type CartItem = Product & { quantity: number; };
 
 const CATEGORIES = [
@@ -42,56 +37,48 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    
     api.get('/catalog')
       .then(res => { 
-        // ВАЖНО: При получении данных, если вдруг externalId дублируются, это взорвет корзину.
-        // Но здесь мы просто сохраняем данные как есть.
-        setProducts(res.data); 
+        // ВАЖНЫЙ ФИКС: Создаем уникальный UID для каждого товара сразу при загрузке.
+        // Это решает проблему дубликатов и отсутствующих ID.
+        const safeProducts = res.data.map((p: ProductRaw, index: number) => ({
+          ...p,
+          uid: p.externalId || p.id || `prod-${index}-${Date.now()}`
+        }));
+        setProducts(safeProducts); 
         setLoading(false); 
       })
       .catch((err) => {
-        console.error("Ошибка загрузки:", err);
+        console.error(err);
         setLoading(false);
       });
   }, [isDark]);
 
-  // ПРОФЕССИОНАЛЬНЫЙ ФИКС КОРЗИНЫ
-  // Мы используем строгое сравнение по ID.
+  // Логика корзины теперь работает через UID
   const updateQuantity = (product: Product, delta: number) => {
-    if (!product.externalId) {
-      console.error("Критическая ошибка: У товара нет externalId!", product);
-      return; 
-    }
-
-    setCart(prevCart => {
-      // 1. Ищем товар в корзине строго по externalId
-      const existingItemIndex = prevCart.findIndex(item => item.externalId === product.externalId);
-      const existingItem = prevCart[existingItemIndex];
-
-      // 2. Если товар уже есть
-      if (existingItem) {
-        const newQuantity = existingItem.quantity + delta;
-
-        // Если количество стало <= 0, удаляем товар из массива
-        if (newQuantity <= 0) {
-          const newCart = [...prevCart];
-          newCart.splice(existingItemIndex, 1);
-          return newCart;
+    setCart(prev => {
+      const idx = prev.findIndex(item => item.uid === product.uid);
+      
+      if (idx !== -1) {
+        // Товар уже есть
+        const newQty = prev[idx].quantity + delta;
+        if (newQty <= 0) {
+          // Удаляем
+          return prev.filter(item => item.uid !== product.uid);
         }
-
-        // Иначе обновляем количество конкретно у этого элемента
-        const newCart = [...prevCart];
-        newCart[existingItemIndex] = { ...existingItem, quantity: newQuantity };
+        // Обновляем количество
+        const newCart = [...prev];
+        newCart[idx] = { ...newCart[idx], quantity: newQty };
         return newCart;
-      }
-
-      // 3. Если товара нет, и мы пытаемся добавить (delta > 0)
+      } 
+      
+      // Товара нет, добавляем
       if (delta > 0) {
-        return [...prevCart, { ...product, quantity: 1 }];
+        return [...prev, { ...product, quantity: 1 }];
       }
-
-      // 4. Если товара нет, и мы пытаемся убавить (минус) - ничего не делаем
-      return prevCart;
+      
+      return prev;
     });
   };
 
@@ -149,21 +136,17 @@ function App() {
           <h2 className="text-xl font-bold mb-6 px-1">Категории</h2>
           <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
             {CATEGORIES.map((cat) => {
-              // ЛОГИКА ДЛЯ ИКОНКИ "ВСЕ"
-              // Если id пустой (это "Все"), мы добавляем padding (p-5), чтобы картинка стала меньше визуально.
-              // Если это обычная категория, padding 0 (p-0), чтобы картинка была на весь круг.
-              const isAllCategory = cat.id === '';
-              
+              const isAll = cat.id === '';
               return (
                 <button key={cat.name} onClick={() => setSelectedCategory(cat.id)} className="flex-shrink-0 flex flex-col items-center gap-3 group">
                   <div className={`w-20 h-20 rounded-[28px] flex items-center justify-center transition-all border-2 overflow-hidden shadow-sm ${
                     selectedCategory === cat.id ? 'border-[#E63946] bg-white shadow-red-500/10 scale-105' : 'bg-gray-100 dark:bg-[#2A2D31] border-transparent group-hover:bg-gray-200 dark:group-hover:bg-[#35393f]'
                   }`}>
+                    {/* ФИКС: Используем padding 3 вместо 5 (слишком много) и object-cover */}
                     <img 
                       src={cat.img} 
                       alt={cat.name} 
-                      // Вот здесь магия размера:
-                      className={`w-full h-full object-cover transition-transform duration-300 ${isAllCategory ? 'p-5 opacity-70' : 'p-0'}`} 
+                      className={`w-full h-full object-cover transition-transform duration-300 ${isAll ? 'p-3 opacity-70' : ''}`} 
                     />
                   </div>
                   <span className={`text-sm font-bold transition-colors ${selectedCategory === cat.id ? 'text-[#E63946]' : 'text-gray-500'}`}>
@@ -181,19 +164,15 @@ function App() {
               <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#E63946]" size={40} /></div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                {products.filter(p => p.name.toLowerCase().includes(selectedCategory.toLowerCase())).map((product, index) => {
-                  
-                  // ВАЖНО: Если вдруг externalId одинаковые, используем index как часть ключа,
-                  // но для логики корзины нам все равно нужен уникальный ID.
-                  const uniqueKey = product.externalId || `prod-${index}`;
-                  const inCart = cart.find(item => item.externalId === product.externalId);
+                {products.filter(p => p.name.toLowerCase().includes(selectedCategory.toLowerCase())).map((product) => {
+                  const inCart = cart.find(item => item.uid === product.uid);
                   
                   return (
-                    // border-radius 30px как просил
-                    <div key={uniqueKey} className={`rounded-[30px] p-2 transition-all duration-300 border ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-xl' : 'bg-white border-transparent shadow-sm hover:shadow-xl'}`}>
+                    // ФИКС: card-container класс для CSS скругления
+                    <div key={product.uid} className={`card-container p-2 transition-all duration-300 border ${isDark ? 'bg-[#1a1d21] border-white/5 shadow-xl' : 'bg-white border-transparent shadow-sm hover:shadow-xl'}`}>
                       
-                      {/* Картинка: rounded-24px чтобы вписывалась в 30px родителя */}
-                      <div className="aspect-square bg-white rounded-[24px] mb-3 flex items-center justify-center overflow-hidden shadow-inner border border-gray-50 relative">
+                      {/* ФИКС: image-container класс для CSS скругления */}
+                      <div className="image-container aspect-square bg-white mb-3 flex items-center justify-center shadow-inner border border-gray-50 relative">
                         <img 
                           src={getProductImage(product.name)} 
                           className="w-full h-full object-contain p-2 transition-transform duration-500 hover:scale-105" 
@@ -201,17 +180,13 @@ function App() {
                         />
                       </div>
                       
-                      {/* Информация о товаре */}
                       <div className="px-3 pb-3">
                         <h3 className="font-bold text-base mb-2 h-10 line-clamp-2 leading-tight opacity-90">{product.name}</h3>
                         <div className="flex items-center justify-between mt-2">
                           <span className="text-xl font-bold tracking-tight">{product.price} ₸</span>
                           
                           {!inCart ? (
-                            <button 
-                              onClick={() => updateQuantity(product, 1)} 
-                              className="bg-[#E63946] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#d62839] transition-all hover:shadow-lg hover:shadow-red-500/30 active:scale-90"
-                            >
+                            <button onClick={() => updateQuantity(product, 1)} className="bg-[#E63946] text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#d62839] transition-all hover:shadow-lg hover:shadow-red-500/30 active:scale-90">
                               <Plus size={22} />
                             </button>
                           ) : (
@@ -241,7 +216,7 @@ function App() {
                 <>
                   <div className="space-y-4 mb-8 max-h-[50vh] overflow-y-auto pr-1 scrollbar-hide">
                     {cart.map(item => (
-                      <div key={item.externalId} className="flex flex-col gap-3 p-4 bg-gray-50/50 dark:bg-white/5 rounded-[24px] border border-gray-100 dark:border-white/5 hover:border-[#E63946]/30 transition-all">
+                      <div key={item.uid} className="flex flex-col gap-3 p-4 bg-gray-50/50 dark:bg-white/5 rounded-[24px] border border-gray-100 dark:border-white/5 hover:border-[#E63946]/30 transition-all">
                         <div className="flex justify-between items-start gap-2">
                           <p className="text-sm font-bold leading-tight opacity-90">{item.name}</p>
                           <button onClick={() => updateQuantity(item, -item.quantity)} className="text-gray-400 hover:text-red-500 transition-colors shrink-0"><Trash2 size={16} /></button>
